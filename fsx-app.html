@@ -1,0 +1,2517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>FSX - Tank Input</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(180deg, #1a5a5f 0%, #2a7a7f 100%);
+            height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .mobile-frame {
+            width: 100%;
+            max-width: 430px;
+            margin: 0 auto;
+            background: #2a6a6f;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .status-bar {
+            background: #1a5a5f;
+            padding: 8px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .signal-bars {
+            display: flex;
+            gap: 2px;
+            align-items: flex-end;
+        }
+
+        .signal-bar {
+            width: 3px;
+            background: white;
+            border-radius: 1px;
+        }
+
+        .battery {
+            width: 24px;
+            height: 12px;
+            border: 1px solid white;
+            border-radius: 2px;
+            position: relative;
+            padding: 1px;
+        }
+
+        .battery::after {
+            content: '';
+            position: absolute;
+            right: -3px;
+            top: 3px;
+            width: 2px;
+            height: 6px;
+            background: white;
+            border-radius: 0 1px 1px 0;
+        }
+
+        .battery-fill {
+            width: 75%;
+            height: 100%;
+            background: white;
+            border-radius: 1px;
+        }
+
+        .header {
+            background: #2a6a6f;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .back-arrow {
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 400;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+
+        .header-icon:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tlm-icon {
+            width: 50px;
+            height: 50px;
+            background: #4CAF50;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.3s;
+        }
+
+        .tlm-icon:hover {
+            transform: scale(1.05);
+        }
+
+        .tlm-icon svg {
+            width: 28px;
+            height: 28px;
+            fill: white;
+        }
+
+        .signal-waves {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 20px;
+            height: 20px;
+        }
+
+        .wave {
+            position: absolute;
+            border: 2px solid #4CAF50;
+            border-radius: 50%;
+            opacity: 0;
+            animation: wave-animation 2s infinite;
+        }
+
+        .wave:nth-child(1) {
+            width: 10px;
+            height: 10px;
+            top: 5px;
+            left: 5px;
+        }
+
+        .wave:nth-child(2) {
+            width: 20px;
+            height: 20px;
+            top: 0;
+            left: 0;
+            animation-delay: 0.5s;
+        }
+
+        @keyframes wave-animation {
+            0% {
+                opacity: 0.6;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(1.5);
+            }
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .tank-info {
+            background: #3a7a7f;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .tank-header {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .tank-subtitle {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .order-info {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .order-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .order-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .order-label {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .order-value {
+            font-size: 18px;
+            font-weight: 500;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .order-date {
+            background: #ff9800;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .days-info {
+            color: #ff6b35;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .location-icon {
+            width: 24px;
+            height: 24px;
+            fill: #2196F3;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .metric-title {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .metric-subtitle {
+            color: #999;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .tank-visual {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .tank-container {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #e0e0e0 0%, #f5f5f5 100%);
+            border: 3px solid #999;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tank-fill {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 95%;
+            background: linear-gradient(180deg, #4CAF50 0%, #45a049 100%);
+            transition: height 0.5s ease;
+        }
+
+        .tank-markers {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .tank-marker {
+            position: absolute;
+            white-space: nowrap;
+        }
+
+        .tank-marker.high {
+            top: -30px;
+        }
+
+        .tank-marker.low {
+            bottom: -30px;
+        }
+
+        .tank-size-label {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .variance-value {
+            color: #f44336;
+            font-weight: 600;
+        }
+
+        .injection-section {
+            background: #1a5a5f;
+            margin: 0 -20px 20px -20px;
+            padding: 15px 20px;
+            color: white;
+        }
+
+        .injection-header {
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+
+        .injection-point {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            color: #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .injection-name {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .injection-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .injection-details {
+            background: rgba(255,255,255,0.9);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+
+        .injection-detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .injection-detail-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-label {
+            color: #666;
+        }
+
+        .detail-value {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .rate-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .rate-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .rate-input-label {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .rate-input {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 18px;
+            font-weight: 500;
+            text-align: center;
+            color: #333;
+        }
+
+        .action-buttons {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 20px;
+            display: flex;
+            gap: 15px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            max-width: 430px;
+            margin: 0 auto;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-cancel {
+            background: white;
+            border: 2px solid #ff6b35;
+            color: #ff6b35;
+        }
+
+        .btn-save {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        /* Popup Styles */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .overlay.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .popup {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            animation: slideUp 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .popup-header h3 {
+            color: #2a5d66;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #555;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .dropdown {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        .dropdown:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .text-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .barcode-btn {
+            background: #2a5d66;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .barcode-btn:hover {
+            background: #1a4d56;
+        }
+
+        .barcode-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .popup-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .popup-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .popup-btn-cancel {
+            background: white;
+            border: 2px solid #e0e0e0;
+            color: #666;
+        }
+
+        .popup-btn-save {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .conditional-fields {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .conditional-fields.active {
+            display: block;
+        }
+
+        .strapping-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .strapping-dropdown {
+            flex: 1;
+        }
+
+        .new-btn {
+            background: #2196F3;
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .new-btn:hover {
+            background: #1976D2;
+        }
+
+        .number-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .number-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .scan-animation {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 20px;
+            padding: 40px;
+            z-index: 1001;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .scan-animation.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .scan-animation svg {
+            width: 100px;
+            height: 100px;
+            fill: #4CAF50;
+            animation: pulse 1.5s infinite;
+        }
+
+        .scan-animation p {
+            color: white;
+            font-size: 18px;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.7;
+            }
+        }
+
+        /* Strapping Table Modal Styles */
+        .strapping-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .strapping-modal.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .strapping-modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        .strapping-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .strapping-modal-header h3 {
+            color: #2a5d66;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .strapping-table-form {
+            display: grid;
+            gap: 20px;
+        }
+
+        .table-name-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+
+        .tank-params {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .percentage-table {
+            margin-top: 20px;
+        }
+
+        .table-header {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 8px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .table-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .percentage-label {
+            font-weight: 500;
+            color: #333;
+            text-align: center;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            font-size: 16px;
+            line-height: 1.2;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .calculated-height {
+            text-align: center;
+            padding: 10px;
+            background: #e8f5e8;
+            border-radius: 6px;
+            font-weight: 500;
+            color: #2e7d2e;
+            font-size: 16px;
+            line-height: 1.2;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .volume-input {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 16px;
+            line-height: 1.2;
+            height: 42px;
+            box-sizing: border-box;
+        }
+
+        .volume-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .volume-display {
+            padding: 10px;
+            border: 2px solid #e8f5e8;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 16px;
+            line-height: 1.2;
+            height: 42px;
+            box-sizing: border-box;
+            background: #e8f5e8;
+            color: #2e7d2e;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .strapping-modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .strapping-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .strapping-btn-cancel {
+            background: white;
+            border: 2px solid #e0e0e0;
+            color: #666;
+        }
+
+        .strapping-btn-save {
+            background: #4CAF50;
+            color: white;
+        }
+
+        /* TLM Bottom Panel */
+        .tlm-panel-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .tlm-panel-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .tlm-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            max-width: 430px;
+            margin: 0 auto;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.2);
+        }
+
+        .tlm-panel.active {
+            transform: translateY(0);
+        }
+
+        .tlm-panel-handle {
+            width: 40px;
+            height: 4px;
+            background: #ccc;
+            border-radius: 2px;
+            margin: 12px auto 8px;
+            cursor: pointer;
+        }
+
+        .tlm-panel-header {
+            padding: 0 25px 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .tlm-panel-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2a5d66;
+            margin: 0;
+        }
+
+        .tlm-panel-subtitle {
+            font-size: 14px;
+            color: #666;
+            margin: 5px 0 0;
+        }
+
+        .tlm-panel-content {
+            padding: 20px 25px;
+        }
+
+        .tlm-section {
+            margin-bottom: 25px;
+        }
+
+        .tlm-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .tlm-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tlm-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        .tlm-status-icon {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .tlm-status-icon.assigned {
+            background: #4CAF50;
+        }
+
+        .tlm-status-icon.warning {
+            background: #FF9800;
+        }
+
+        .tlm-status-icon.error {
+            background: #F44336;
+        }
+
+        .tlm-status-icon.unassigned {
+            background: #9E9E9E;
+        }
+
+        .tlm-status-text {
+            flex: 1;
+        }
+
+        .tlm-status-primary {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .tlm-status-secondary {
+            color: #666;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        .tlm-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .tlm-action-btn {
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: white;
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tlm-action-btn:hover {
+            border-color: #4CAF50;
+            background: #f8f9fa;
+        }
+
+        .tlm-action-btn.primary {
+            background: #4CAF50;
+            border-color: #4CAF50;
+            color: white;
+        }
+
+        .tlm-action-btn.primary:hover {
+            background: #45a049;
+        }
+
+        .tlm-action-btn.danger {
+            border-color: #F44336;
+            color: #F44336;
+        }
+
+        .tlm-action-btn.danger:hover {
+            background: #ffebee;
+        }
+
+        .progressive-fields {
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .progressive-fields.active {
+            opacity: 1;
+            max-height: 500px;
+        }
+
+        .tlm-icon-badge {
+            position: absolute;
+            top: -3px;
+            right: -3px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        .tlm-icon-badge.assigned {
+            background: #4CAF50;
+        }
+
+        .tlm-icon-badge.warning {
+            background: #FF9800;
+        }
+
+        .tlm-icon-badge.error {
+            background: #F44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-frame">
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-left">
+                <span>5:33</span>
+            </div>
+            <div class="status-right">
+                <div class="signal-bars">
+                    <div class="signal-bar" style="height: 4px;"></div>
+                    <div class="signal-bar" style="height: 6px;"></div>
+                    <div class="signal-bar" style="height: 8px;"></div>
+                    <div class="signal-bar" style="height: 10px;"></div>
+                </div>
+                <span>5G</span>
+                <div class="battery">
+                    <div class="battery-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <span class="back-arrow">←</span>
+                <h1 class="header-title">Tank Input</h1>
+            </div>
+            <div class="header-right">
+                <div class="header-icon">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
+                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                        <path d="M12 7v5l3 3" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="tlm-icon" onclick="openTLMPanel()">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2C11.45 2 11 2.45 11 3V5.08C8.16 5.57 6 8.03 6 11V17L4 19V20H20V19L18 17V11C18 8.03 15.84 5.57 13 5.08V3C13 2.45 12.55 2 12 2ZM12 7C14.21 7 16 8.79 16 11V18H8V11C8 8.79 9.79 7 12 7Z"/>
+                        <path d="M9 12H15V14H9V12Z"/>
+                    </svg>
+                    <div class="signal-waves">
+                        <div class="wave"></div>
+                        <div class="wave"></div>
+                    </div>
+                    <div class="tlm-icon-badge assigned" id="tlmBadge"></div>
+                </div>
+                <div class="header-icon">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
+                        <rect x="4" y="6" width="16" height="2" rx="1"/>
+                        <rect x="4" y="11" width="16" height="2" rx="1"/>
+                        <rect x="4" y="16" width="16" height="2" rx="1"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Tank Info -->
+            <div class="tank-info">
+                <div class="tank-header">335X-36Z - SCAL20357A</div>
+                <div class="tank-subtitle">| 1</div>
+            </div>
+
+            <!-- Order Info -->
+            <div class="order-info">
+                <div class="order-row">
+                    <span class="order-label">Open Order</span>
+                    <div class="order-value">
+                        <span class="order-date">11/07/2025</span>
+                    </div>
+                </div>
+                <div class="order-row">
+                    <span class="order-label"></span>
+                    <div class="order-value">
+                        <span class="days-info">32 days</span>
+                        <svg class="location-icon" viewBox="0 0 24 24">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="order-row">
+                    <span class="order-label">Since inventory</span>
+                </div>
+            </div>
+
+            <!-- Metrics Grid -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-title">Total Target Rate</div>
+                    <div class="metric-value">1 GPD</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">Pump Variance</div>
+                    <div class="metric-value variance-value">-16059.89 %</div>
+                    <div class="metric-subtitle">Current vs Previous</div>
+                </div>
+            </div>
+
+            <!-- Tank Visual and Stats -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="tank-visual">
+                        <div class="tank-container">
+                            <div class="tank-fill"></div>
+                            <div class="tank-markers">
+                                <div class="tank-marker high">H/ 183G</div>
+                                <div class="tank-marker low">L/ 180G</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tank-size-label">Tank Size<br>200 GAL</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">Injection Rate (site)</div>
+                    <div class="metric-value">-1.14 GPD</div>
+                    <div class="metric-subtitle">Current vs Previous</div>
+                    <br>
+                    <div class="metric-title">Tank Measurement</div>
+                    <div class="metric-value">189.94 GAL</div>
+                    <div class="metric-subtitle">Current vs Previous</div>
+                </div>
+            </div>
+
+            <!-- Injection Point Data -->
+            <div class="injection-section">
+                <div class="injection-header">INJECTION POINT DATA (1 injection point)</div>
+                <div class="injection-point">
+                    <span class="injection-name">335X-36Z</span>
+                    <div class="injection-actions">
+                        <span>×</span>
+                        <span>⌄</span>
+                    </div>
+                </div>
+                <div class="injection-details">
+                    <div class="injection-detail-row">
+                        <span class="detail-label">Recommended target rate</span>
+                        <span class="detail-value">N/A</span>
+                    </div>
+                    <div class="injection-detail-row">
+                        <span class="detail-label">Pump minimum</span>
+                        <span class="detail-value">NoN GPD</span>
+                    </div>
+                    <div class="injection-detail-row">
+                        <span class="detail-label">Active Rate Type</span>
+                        <span class="detail-value">Manual</span>
+                    </div>
+                </div>
+                <div class="rate-inputs">
+                    <div class="rate-input-group">
+                        <span class="rate-input-label">Target rate</span>
+                        <span class="rate-input-label">Manual (GPD)</span>
+                        <div class="rate-input">1</div>
+                    </div>
+                    <div class="rate-input-group">
+                        <span class="rate-input-label">&nbsp;</span>
+                        <span class="rate-input-label">Active (GPD)</span>
+                        <div class="rate-input">1</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button class="btn btn-cancel">Cancel</button>
+            <button class="btn btn-save">Save</button>
+        </div>
+    </div>
+
+    <!-- TLM Bottom Panel -->
+    <div class="tlm-panel-overlay" id="tlmPanelOverlay" onclick="closeTLMPanel()">
+        <div class="tlm-panel" id="tlmPanel" onclick="event.stopPropagation()">
+            <div class="tlm-panel-handle" onclick="closeTLMPanel()"></div>
+            
+            <div class="tlm-panel-header">
+                <h2 class="tlm-panel-title">TLM Assignment</h2>
+                <p class="tlm-panel-subtitle">Tank 335X-36Z - SCAL20357A</p>
+            </div>
+            
+            <div class="tlm-panel-content" id="tlmPanelContent">
+                <!-- Content will be dynamically generated based on TLM state -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Scan Animation -->
+    <div class="scan-animation" id="scanAnimation">
+        <svg viewBox="0 0 24 24">
+            <path d="M4 6H6V18H4V6M7 6H8V18H7V6M9 6H12V18H9V6M13 6H14V18H13V6M16 6H18V18H16V6M19 6H20V18H19V6M2 4V8H0V4C0 2.9 0.9 2 2 2H6V4H2M22 2C23.1 2 24 2.9 24 4V8H22V4H18V2H22M2 16V20H6V22H2C0.9 22 0 21.1 0 20V16H2M22 20V16H24V20C24 21.1 23.1 22 22 22H18V20H22Z"/>
+        </svg>
+        <p>Scanning barcode...</p>
+    </div>
+
+    <!-- Strapping Table View Modal -->
+    <div class="strapping-modal" id="strappingViewModal">
+        <div class="strapping-modal-content">
+            <div class="strapping-modal-header">
+                <h3 id="viewModalTitle">Strapping Table Details</h3>
+                <button class="close-btn" onclick="closeStrappingViewModal()">&times;</button>
+            </div>
+            
+            <div id="strappingViewContent">
+                <!-- Content will be dynamically generated -->
+            </div>
+            
+            <div class="strapping-modal-buttons">
+                <button class="strapping-btn strapping-btn-cancel" onclick="closeStrappingViewModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Strapping Table Modal -->
+    <div class="strapping-modal" id="strappingModal">
+        <div class="strapping-modal-content">
+            <div class="strapping-modal-header">
+                <h3>Create New Strapping Table</h3>
+                <button class="close-btn" onclick="closeStrappingModal()">&times;</button>
+            </div>
+            
+            <div class="strapping-table-form">
+                <div class="form-group">
+                    <label for="table-name">Table Name</label>
+                    <input type="text" id="table-name" class="table-name-input" placeholder="Enter strapping table name">
+                </div>
+                
+                <div class="tank-params">
+                    <div class="form-group">
+                        <label for="max-height">Max Tank Height (Inch)</label>
+                        <input type="number" id="max-height" class="number-input" placeholder="0" step="0.1" oninput="calculateHeights()">
+                    </div>
+                    <div class="form-group">
+                        <label for="max-volume">Max Tank Volume (Gal)</label>
+                        <input type="number" id="max-volume" class="number-input" placeholder="0" step="0.1" oninput="updateMaxVolume()">
+                    </div>
+                </div>
+                
+                <div class="percentage-table" id="percentageTable" style="display: none;">
+                    <div class="table-header">
+                        <div>Fill Level</div>
+                        <div>Height (Inch)</div>
+                        <div>Volume (Gal)</div>
+                    </div>
+                    <div class="table-row">
+                        <div class="percentage-label">100%</div>
+                        <div class="calculated-height" id="height-100">0.0</div>
+                        <div class="volume-display" id="volume-100">0.0</div>
+                    </div>
+                    <div class="table-row">
+                        <div class="percentage-label">80%</div>
+                        <div class="calculated-height" id="height-80">0.0</div>
+                        <input type="number" class="volume-input" id="volume-80" placeholder="0" step="0.1">
+                    </div>
+                    <div class="table-row">
+                        <div class="percentage-label">60%</div>
+                        <div class="calculated-height" id="height-60">0.0</div>
+                        <input type="number" class="volume-input" id="volume-60" placeholder="0" step="0.1">
+                    </div>
+                    <div class="table-row">
+                        <div class="percentage-label">40%</div>
+                        <div class="calculated-height" id="height-40">0.0</div>
+                        <input type="number" class="volume-input" id="volume-40" placeholder="0" step="0.1">
+                    </div>
+                    <div class="table-row">
+                        <div class="percentage-label">20%</div>
+                        <div class="calculated-height" id="height-20">0.0</div>
+                        <input type="number" class="volume-input" id="volume-20" placeholder="0" step="0.1">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="strapping-modal-buttons">
+                <button class="strapping-btn strapping-btn-cancel" onclick="closeStrappingModal()">Cancel</button>
+                <button class="strapping-btn strapping-btn-save" onclick="saveStrappingTable()">Save Table</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // TLM State Management
+        let tlmState = {
+            assigned: true, // Change to false to test unassigned state
+            tlmId: 'TLM-A4B7X9K2',
+            provider: 'Tekelek',
+            tankType: 'Horizontal',
+            strappingTable: 'Custom Tank Table 1',
+            correctionFactor: '0.98',
+            lastSeen: '2 minutes ago',
+            lastReading: '189.94 GAL',
+            readingTime: '11:42 AM',
+            status: 'assigned', // assigned, warning, error, unassigned
+            batteryLevel: '85%'
+        };
+        
+        // Store created strapping tables with their data
+        let strappingTables = [
+            { value: 'table1', text: 'Strapping Table 1', data: null },
+            { value: 'table2', text: 'Strapping Table 2', data: null },
+            { 
+                value: 'custom_tank_table_1', 
+                text: 'Custom Tank Table 1',
+                data: {
+                    tankType: 'horizontal',
+                    maxHeight: '120',
+                    maxVolume: '500',
+                    measurements: {
+                        100: { height: '120.0', volume: '500' },
+                        80: { height: '96.0', volume: '400' },
+                        60: { height: '72.0', volume: '300' },
+                        40: { height: '48.0', volume: '200' },
+                        20: { height: '24.0', volume: '100' }
+                    }
+                }
+            }
+        ];
+        
+        // Currently selected strapping table data
+        let currentStrappingData = null;
+
+        function openTLMPanel() {
+            document.getElementById('tlmPanelOverlay').classList.add('active');
+            document.getElementById('tlmPanel').classList.add('active');
+            renderTLMPanelContent();
+        }
+
+        function closeTLMPanel() {
+            document.getElementById('tlmPanelOverlay').classList.remove('active');
+            document.getElementById('tlmPanel').classList.remove('active');
+        }
+
+        function renderTLMPanelContent() {
+            const content = document.getElementById('tlmPanelContent');
+            content.innerHTML = renderTLMOverviewContent();
+            // Update icon badge
+            updateTLMIconBadge();
+        }
+
+        function renderTLMOverviewContent() {
+            if (tlmState.assigned) {
+                return `
+                    <div class="tlm-section">
+                        <div class="tlm-section-title">📊 TLM Overview</div>
+                        
+                        <div class="form-group">
+                            <label>TLM ID</label>
+                            <div style="padding: 12px 15px; background: #f8f9fa; border-radius: 10px; font-weight: 500;">
+                                ${tlmState.tlmId}
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Last TLM Reading</label>
+                            <div style="padding: 12px 15px; background: #e8f5e8; border-radius: 10px; font-weight: 500; color: #2e7d2e;">
+                                ${tlmState.lastReading} <span style="font-size: 12px; opacity: 0.8;">at ${tlmState.readingTime}</span>
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div class="form-group">
+                                <label>Provider</label>
+                                <div style="padding: 8px 12px; background: #f8f9fa; border-radius: 8px; font-size: 14px;">
+                                    ${tlmState.provider}
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Tank Type</label>
+                                <div style="padding: 8px 12px; background: #f8f9fa; border-radius: 8px; font-size: 14px;">
+                                    ${tlmState.tankType}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div class="form-group">
+                                <label>Strapping Table</label>
+                                <div style="padding: 8px 12px; background: #f8f9fa; border-radius: 8px; font-size: 14px; display: flex; align-items: center; justify-content: space-between;">
+                                    <span>${tlmState.strappingTable}</span>
+                                    <a href="#" onclick="viewStrappingTable('${tlmState.strappingTable}'); return false;" style="color: #2196F3; text-decoration: none; font-weight: 500;">View</a>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Correction Factor</label>
+                                <div style="padding: 8px 12px; background: #f8f9fa; border-radius: 8px; font-size: 14px;">
+                                    ${tlmState.correctionFactor}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tlm-actions" style="grid-template-columns: 1fr 1fr; margin-top: 25px;">
+                        <button class="tlm-action-btn" onclick="checkReading()">📊 Check Reading</button>
+                        <button class="tlm-action-btn" onclick="editTLM()">✏️ Edit</button>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div class="tlm-section">
+                        <div class="tlm-section-title">📊 TLM Overview</div>
+                        
+                        <div class="tlm-status">
+                            <div class="tlm-status-icon unassigned"></div>
+                            <div class="tlm-status-text">
+                                <div class="tlm-status-primary">No TLM Assigned</div>
+                                <div class="tlm-status-secondary">This tank does not have a tank level monitor assigned</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tlm-actions" style="grid-template-columns: 1fr; margin-top: 25px;">
+                        <button class="tlm-action-btn primary" onclick="addTLM()">➕ Add TLM</button>
+                    </div>
+                `;
+            }
+        }
+
+        function updateTLMIconBadge() {
+            const badge = document.getElementById('tlmBadge');
+            if (tlmState.assigned) {
+                badge.className = `tlm-icon-badge ${tlmState.status}`;
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function handleProviderChange() {
+            const provider = document.getElementById('assign-provider').value;
+            const providerFields = document.getElementById('providerFields');
+            
+            if (provider === 'tekelek' || provider === 'multitech') {
+                providerFields.classList.add('active');
+            } else {
+                providerFields.classList.remove('active');
+            }
+        }
+
+        // TLM Action Functions
+        function addTLM() {
+            // Show the assignment form
+            const content = document.getElementById('tlmPanelContent');
+            content.innerHTML = renderAssignmentContent();
+        }
+
+        function checkReading() {
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ Checking...';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                const currentLevel = '189.94 GAL';
+                const tlmLevel = tlmState.lastReading;
+                const difference = Math.abs(189.94 - parseFloat(tlmLevel.replace(' GAL', ''))).toFixed(2);
+                
+                alert(`📊 Reading Check:\n\nCurrent Display: ${currentLevel}\nTLM Reading: ${tlmLevel}\nDifference: ${difference} GAL\n\nStatus: ✅ Within tolerance`);
+                
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 1500);
+        }
+
+        function editTLM() {
+            // Show the edit form with current values
+            const content = document.getElementById('tlmPanelContent');
+            content.innerHTML = renderEditContent();
+        }
+
+        function renderAssignmentContent() {
+            return `
+                <div class="tlm-section">
+                    <div class="tlm-section-title">➕ Add TLM</div>
+                    
+                    <div class="form-group">
+                        <label for="assign-provider">Provider</label>
+                        <select id="assign-provider" class="dropdown" onchange="handleProviderChange()">
+                            <option value="">Select a provider</option>
+                            <option value="tekelek">Tekelek</option>
+                            <option value="multitech">MultiTech</option>
+                            <option value="wellaware">Wellaware</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="assign-tlm-id">TLM ID</label>
+                        <div class="input-group">
+                            <input type="text" id="assign-tlm-id" class="text-input" placeholder="Enter TLM ID or scan barcode">
+                            <button class="barcode-btn" onclick="scanBarcode()" title="Scan Barcode">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="white">
+                                    <path d="M4 6H6V18H4V6M7 6H8V18H7V6M9 6H12V18H9V6M13 6H14V18H13V6M16 6H18V18H16V6M19 6H20V18H19V6M2 4V8H0V4C0 2.9 0.9 2 2 2H6V4H2M22 2C23.1 2 24 2.9 24 4V8H22V4H18V2H22M2 16V20H6V22H2C0.9 22 0 21.1 0 20V16H2M22 20V16H24V20C24 21.1 23.1 22 22 22H18V20H22Z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="progressive-fields" id="providerFields">
+                        <div class="form-group">
+                            <label for="assign-tank-type">Tank Type</label>
+                            <select id="assign-tank-type" class="dropdown">
+                                <option value="">Select tank type</option>
+                                <option value="vertical">Vertical</option>
+                                <option value="horizontal">Horizontal</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="assign-strapping-table">Strapping Table</label>
+                            <div class="strapping-group">
+                                <select id="assign-strapping-table" class="dropdown strapping-dropdown">
+                                    <option value="">Select strapping table</option>
+                                    ${strappingTables.map(table => 
+                                        `<option value="${table.value}">${table.text}</option>`
+                                    ).join('')}
+                                </select>
+                                <button class="new-btn" onclick="addNewStrappingTable()">+ New</button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="assign-correction-factor">Correction Factor</label>
+                            <input type="number" id="assign-correction-factor" class="number-input" placeholder="1.00" step="0.01">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tlm-actions" style="grid-template-columns: 1fr 1fr; margin-top: 25px;">
+                    <button class="tlm-action-btn" onclick="cancelAssignment()">Cancel</button>
+                    <button class="tlm-action-btn primary" onclick="saveAssignment()">Save</button>
+                </div>
+            `;
+        }
+
+        function renderEditContent() {
+            return `
+                <div class="tlm-section">
+                    <div class="tlm-section-title">✏️ Edit TLM</div>
+                    
+                    <div class="form-group">
+                        <label for="edit-provider">Provider</label>
+                        <select id="edit-provider" class="dropdown" onchange="handleEditProviderChange()">
+                            <option value="tekelek" ${tlmState.provider.toLowerCase() === 'tekelek' ? 'selected' : ''}>Tekelek</option>
+                            <option value="multitech" ${tlmState.provider.toLowerCase() === 'multitech' ? 'selected' : ''}>MultiTech</option>
+                            <option value="wellaware" ${tlmState.provider.toLowerCase() === 'wellaware' ? 'selected' : ''}>Wellaware</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-tlm-id">TLM ID</label>
+                        <div class="input-group">
+                            <input type="text" id="edit-tlm-id" class="text-input" value="${tlmState.tlmId}">
+                            <button class="barcode-btn" onclick="scanBarcode()" title="Scan Barcode">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="white">
+                                    <path d="M4 6H6V18H4V6M7 6H8V18H7V6M9 6H12V18H9V6M13 6H14V18H13V6M16 6H18V18H16V6M19 6H20V18H19V6M2 4V8H0V4C0 2.9 0.9 2 2 2H6V4H2M22 2C23.1 2 24 2.9 24 4V8H22V4H18V2H22M2 16V20H6V22H2C0.9 22 0 21.1 0 20V16H2M22 20V16H24V20C24 21.1 23.1 22 22 22H18V20H22Z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="progressive-fields active" id="editProviderFields">
+                        <div class="form-group">
+                            <label for="edit-tank-type">Tank Type</label>
+                            <select id="edit-tank-type" class="dropdown">
+                                <option value="vertical" ${tlmState.tankType.toLowerCase() === 'vertical' ? 'selected' : ''}>Vertical</option>
+                                <option value="horizontal" ${tlmState.tankType.toLowerCase() === 'horizontal' ? 'selected' : ''}>Horizontal</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit-strapping-table">Strapping Table</label>
+                            <div class="strapping-group">
+                                <select id="edit-strapping-table" class="dropdown strapping-dropdown">
+                                    ${strappingTables.map(table => 
+                                        `<option value="${table.value}" ${table.text === tlmState.strappingTable ? 'selected' : ''}>${table.text}</option>`
+                                    ).join('')}
+                                </select>
+                                <button class="new-btn" onclick="addNewStrappingTable()">+ New</button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit-correction-factor">Correction Factor</label>
+                            <input type="number" id="edit-correction-factor" class="number-input" value="${tlmState.correctionFactor}" step="0.01">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tlm-actions" style="grid-template-columns: 1fr 1fr 1fr; margin-top: 25px;">
+                    <button class="tlm-action-btn" onclick="cancelEdit()">Cancel</button>
+                    <button class="tlm-action-btn danger" onclick="unassignTLM()">Unassign</button>
+                    <button class="tlm-action-btn primary" onclick="saveEdit()">Save</button>
+                </div>
+            `;
+        }
+
+        function assignTLM() {
+            const provider = document.getElementById('assign-provider').value;
+            const tlmId = document.getElementById('assign-tlm-id').value;
+            
+            if (!provider || !tlmId) {
+                alert('Please select a provider and enter a TLM ID');
+                return;
+            }
+            
+            if (provider === 'tekelek' || provider === 'multitech') {
+                const tankType = document.getElementById('assign-tank-type').value;
+                const strappingTable = document.getElementById('assign-strapping-table').value;
+                
+                if (!tankType || !strappingTable) {
+                    alert('Please complete all required fields for ' + provider);
+                    return;
+                }
+            }
+            
+            // Update TLM state
+            tlmState.assigned = true;
+            tlmState.tlmId = tlmId;
+            tlmState.provider = provider;
+            tlmState.tankType = document.getElementById('assign-tank-type').value || 'not specified';
+            tlmState.strappingTable = document.getElementById('assign-strapping-table').value || 'default';
+            tlmState.correctionFactor = document.getElementById('assign-correction-factor').value || '1.00';
+            tlmState.status = 'assigned';
+            tlmState.lastSeen = 'Just now';
+            
+            alert('TLM successfully assigned to tank!');
+            renderTLMPanelContent();
+        }
+
+        function cancelAssignment() {
+            renderTLMPanelContent();
+        }
+
+        function saveAssignment() {
+            const provider = document.getElementById('assign-provider').value;
+            const tlmId = document.getElementById('assign-tlm-id').value;
+            
+            if (!provider || !tlmId) {
+                alert('Please select a provider and enter a TLM ID');
+                return;
+            }
+            
+            if (provider === 'tekelek' || provider === 'multitech') {
+                const tankType = document.getElementById('assign-tank-type').value;
+                const strappingTable = document.getElementById('assign-strapping-table').value;
+                
+                if (!tankType || !strappingTable) {
+                    alert('Please complete all required fields for ' + provider);
+                    return;
+                }
+            }
+            
+            // Update TLM state
+            tlmState.assigned = true;
+            tlmState.tlmId = tlmId;
+            tlmState.provider = provider.charAt(0).toUpperCase() + provider.slice(1);
+            tlmState.tankType = (document.getElementById('assign-tank-type').value || 'not specified').charAt(0).toUpperCase() + (document.getElementById('assign-tank-type').value || 'not specified').slice(1);
+            tlmState.strappingTable = document.getElementById('assign-strapping-table').selectedOptions[0].text || 'default';
+            tlmState.correctionFactor = document.getElementById('assign-correction-factor').value || '1.00';
+            tlmState.status = 'assigned';
+            tlmState.lastSeen = 'Just now';
+            tlmState.lastReading = '189.94 GAL';
+            tlmState.readingTime = new Date().toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'});
+            
+            alert('TLM successfully assigned to tank!');
+            renderTLMPanelContent();
+        }
+
+        function cancelEdit() {
+            renderTLMPanelContent();
+        }
+
+        function saveEdit() {
+            const provider = document.getElementById('edit-provider').value;
+            const tlmId = document.getElementById('edit-tlm-id').value;
+            const tankType = document.getElementById('edit-tank-type').value;
+            const strappingTable = document.getElementById('edit-strapping-table').selectedOptions[0].text;
+            const correctionFactor = document.getElementById('edit-correction-factor').value;
+            
+            // Update TLM state
+            tlmState.provider = provider.charAt(0).toUpperCase() + provider.slice(1);
+            tlmState.tlmId = tlmId;
+            tlmState.tankType = tankType.charAt(0).toUpperCase() + tankType.slice(1);
+            tlmState.strappingTable = strappingTable;
+            tlmState.correctionFactor = correctionFactor;
+            
+            alert('TLM configuration updated successfully!');
+            renderTLMPanelContent();
+        }
+
+        function unassignTLM() {
+            const confirmed = confirm('Are you sure you want to unassign this TLM?\n\nThis will remove all device configuration from this tank.');
+            if (confirmed) {
+                tlmState.assigned = false;
+                tlmState.status = 'unassigned';
+                alert('TLM has been unassigned from this tank.');
+                renderTLMPanelContent();
+            }
+        }
+
+        function handleEditProviderChange() {
+            // Handle provider change in edit mode if needed
+        }
+
+        function scanBarcode() {
+            const scanAnimation = document.getElementById('scanAnimation');
+            scanAnimation.classList.add('active');
+            
+            setTimeout(() => {
+                scanAnimation.classList.remove('active');
+                
+                // Generate mock barcode data
+                const mockBarcodeData = 'TLM-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+                
+                // Try to find the TLM ID input field
+                const tlmIdInput = document.getElementById('assign-tlm-id') || 
+                                   document.getElementById('edit-tlm-id') || 
+                                   document.getElementById('tlm-id');
+                if (tlmIdInput) {
+                    tlmIdInput.value = mockBarcodeData;
+                    
+                    // Visual feedback
+                    tlmIdInput.style.borderColor = '#4CAF50';
+                    setTimeout(() => {
+                        tlmIdInput.style.borderColor = '#e0e0e0';
+                    }, 1500);
+                }
+            }, 2000);
+        }
+
+        function addNewStrappingTable() {
+            const tankTypeInput = document.getElementById('assign-tank-type') || 
+                                  document.getElementById('edit-tank-type') || 
+                                  document.getElementById('tank-type');
+            const tankType = tankTypeInput ? tankTypeInput.value : null;
+            
+            if (!tankType) {
+                alert('Please select a tank type first');
+                return;
+            }
+            
+            document.getElementById('strappingModal').classList.add('active');
+            
+            // Show percentage table only for horizontal tanks
+            const percentageTable = document.getElementById('percentageTable');
+            if (tankType === 'horizontal') {
+                percentageTable.style.display = 'block';
+            } else {
+                percentageTable.style.display = 'none';
+            }
+        }
+
+        function closeStrappingModal() {
+            document.getElementById('strappingModal').classList.remove('active');
+            clearStrappingForm();
+        }
+
+        function clearStrappingForm() {
+            document.getElementById('table-name').value = '';
+            document.getElementById('max-height').value = '';
+            document.getElementById('max-volume').value = '';
+            
+            // Clear volume inputs
+            const percentages = [80, 60, 40, 20];
+            percentages.forEach(p => {
+                const volumeInput = document.getElementById(`volume-${p}`);
+                if (volumeInput) volumeInput.value = '';
+            });
+            
+            // Reset heights and max volume
+            calculateHeights();
+            updateMaxVolume();
+        }
+
+        function calculateHeights() {
+            const maxHeight = parseFloat(document.getElementById('max-height').value) || 0;
+            const percentages = [100, 80, 60, 40, 20];
+            
+            percentages.forEach(percentage => {
+                const height = (maxHeight * percentage / 100).toFixed(1);
+                const heightElement = document.getElementById(`height-${percentage}`);
+                if (heightElement) {
+                    heightElement.textContent = height;
+                }
+            });
+        }
+
+        function updateMaxVolume() {
+            const maxVolume = parseFloat(document.getElementById('max-volume').value) || 0;
+            const volume100Element = document.getElementById('volume-100');
+            if (volume100Element) {
+                volume100Element.textContent = maxVolume.toFixed(1);
+            }
+        }
+
+        function saveStrappingTable() {
+            const tableName = document.getElementById('table-name').value.trim();
+            const maxHeight = document.getElementById('max-height').value;
+            const maxVolume = document.getElementById('max-volume').value;
+            
+            // Get tank type from the appropriate field
+            const tankTypeInput = document.getElementById('assign-tank-type') || 
+                                  document.getElementById('edit-tank-type') || 
+                                  document.getElementById('tank-type');
+            const tankType = tankTypeInput ? tankTypeInput.value : null;
+            
+            if (!tableName) {
+                alert('Please enter a table name');
+                return;
+            }
+            
+            if (!maxHeight || !maxVolume) {
+                alert('Please enter max height and volume');
+                return;
+            }
+            
+            const tableData = {
+                name: tableName,
+                tankType: tankType,
+                maxHeight: maxHeight,
+                maxVolume: maxVolume
+            };
+            
+            // For horizontal tanks, collect the percentage data
+            if (tankType === 'horizontal') {
+                const percentages = [100, 80, 60, 40, 20];
+                tableData.measurements = {};
+                
+                let allVolumesFilled = true;
+                percentages.forEach(percentage => {
+                    let volume;
+                    const height = document.getElementById(`height-${percentage}`).textContent;
+                    
+                    if (percentage === 100) {
+                        // For 100%, use the max volume value
+                        volume = maxVolume;
+                    } else {
+                        // For other percentages, get from input field
+                        volume = document.getElementById(`volume-${percentage}`).value;
+                        if (!volume) {
+                            allVolumesFilled = false;
+                        }
+                    }
+                    
+                    tableData.measurements[percentage] = {
+                        height: height,
+                        volume: volume || '0'
+                    };
+                });
+                
+                if (!allVolumesFilled) {
+                    const proceed = confirm('Some volume fields are empty. Do you want to continue anyway?');
+                    if (!proceed) return;
+                }
+            }
+            
+            // Add to strapping tables array with full data
+            const newTableValue = tableName.toLowerCase().replace(/\s+/g, '_');
+            strappingTables.push({ 
+                value: newTableValue, 
+                text: tableName,
+                data: tableData 
+            });
+            
+            // Update the TLM state with the new strapping table
+            tlmState.strappingTable = tableName;
+            
+            console.log('Strapping table saved:', tableData);
+            
+            // Close the modal first
+            closeStrappingModal();
+            
+            // Show success message
+            alert(`Strapping table "${tableName}" created successfully!`);
+            
+            // Return to the TLM Overview
+            renderTLMPanelContent();
+        }
+
+        function saveTLMConfiguration() {
+            const provider = document.getElementById('provider').value;
+            const tlmId = document.getElementById('tlm-id').value;
+            
+            if (!provider) {
+                alert('Please select a provider');
+                return;
+            }
+            
+            if (!tlmId) {
+                alert('Please enter or scan a TLM ID');
+                return;
+            }
+            
+            const config = {
+                provider: provider,
+                tlmId: tlmId
+            };
+            
+            // Add conditional fields if applicable
+            if (provider === 'tekelek' || provider === 'multitech') {
+                const tankType = document.getElementById('tank-type').value;
+                const strappingTable = document.getElementById('strapping-table').value;
+                const correctionFactor = document.getElementById('correction-factor').value;
+                
+                if (!tankType) {
+                    alert('Please select a tank type');
+                    return;
+                }
+                
+                if (!strappingTable) {
+                    alert('Please select a strapping table');
+                    return;
+                }
+                
+                config.tankType = tankType;
+                config.strappingTable = strappingTable;
+                config.correctionFactor = correctionFactor || '1.00';
+            }
+            
+            console.log('TLM Configuration saved:', config);
+            
+            let alertMessage = `TLM Configuration Saved!\n\nProvider: ${provider}\nTLM ID: ${tlmId}`;
+            
+            if (config.tankType) {
+                alertMessage += `\nTank Type: ${config.tankType}`;
+                alertMessage += `\nStrapping Table: ${config.strappingTable}`;
+                alertMessage += `\nCorrection Factor: ${config.correctionFactor}`;
+            }
+            
+            alert(alertMessage);
+            closeTLMPopup();
+        }
+
+        function viewStrappingTable(tableName) {
+            // Find the strapping table data
+            const table = strappingTables.find(t => t.text === tableName);
+            
+            if (!table || !table.data) {
+                alert('No data available for this strapping table.');
+                return;
+            }
+            
+            // Update modal title
+            document.getElementById('viewModalTitle').textContent = `Strapping Table: ${tableName}`;
+            
+            // Generate content
+            let content = `
+                <div class="form-group">
+                    <label>Tank Type</label>
+                    <div style="padding: 12px 15px; background: #f8f9fa; border-radius: 10px; text-transform: capitalize;">
+                        ${table.data.tankType}
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Max Tank Height</label>
+                        <div style="padding: 12px 15px; background: #f8f9fa; border-radius: 10px;">
+                            ${table.data.maxHeight} Inches
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Max Tank Volume</label>
+                        <div style="padding: 12px 15px; background: #f8f9fa; border-radius: 10px;">
+                            ${table.data.maxVolume} Gallons
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add measurement table for horizontal tanks
+            if (table.data.tankType === 'horizontal' && table.data.measurements) {
+                content += `
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label>Measurement Points</label>
+                        <div style="background: #f8f9fa; border-radius: 10px; padding: 15px;">
+                            <div class="table-header">
+                                <div>Fill Level</div>
+                                <div>Height (Inch)</div>
+                                <div>Volume (Gal)</div>
+                            </div>
+                `;
+                
+                const percentages = [100, 80, 60, 40, 20];
+                percentages.forEach(percentage => {
+                    if (table.data.measurements[percentage]) {
+                        content += `
+                            <div class="table-row">
+                                <div class="percentage-label">${percentage}%</div>
+                                <div style="text-align: center; padding: 10px; background: #e8f5e8; border-radius: 6px;">
+                                    ${table.data.measurements[percentage].height}
+                                </div>
+                                <div style="text-align: center; padding: 10px; background: #fff; border: 1px solid #e0e0e0; border-radius: 6px;">
+                                    ${table.data.measurements[percentage].volume}
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                
+                content += `
+                        </div>
+                    </div>
+                `;
+                
+                // Add regression curve visualization
+                content += `
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label>Deadspace vs Volume Curve (Cubic Regression)</label>
+                        <div style="background: white; border: 1px solid #e0e0e0; border-radius: 10px; padding: 20px;">
+                            <canvas id="regressionCanvas" width="400" height="250" style="width: 100%; max-width: 400px; height: auto;"></canvas>
+                            <div style="margin-top: 10px; font-size: 12px; color: #666; text-align: center;">
+                                <div>Tekelek Measurement: Deadspace from top → Volume conversion</div>
+                                <div>Cubic Function: y = ax³ + bx² + cx + d</div>
+                                <div id="equationText" style="margin-top: 5px; font-family: monospace;"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Update content and show modal
+            document.getElementById('strappingViewContent').innerHTML = content;
+            document.getElementById('strappingViewModal').classList.add('active');
+            
+            // Draw the regression curve if it's a horizontal tank with measurements
+            if (table.data.tankType === 'horizontal' && table.data.measurements) {
+                setTimeout(() => drawRegressionCurve(table.data), 100);
+            }
+        }
+        
+        function closeStrappingViewModal() {
+            document.getElementById('strappingViewModal').classList.remove('active');
+        }
+        
+        function drawRegressionCurve(tableData) {
+            const canvas = document.getElementById('regressionCanvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            // Extract data points and convert to deadspace measurements
+            // Tekelek measures deadspace (distance from top), so we need to invert the height
+            const dataPoints = [];
+            const percentages = [20, 40, 60, 80, 100];
+            const maxTankHeight = parseFloat(tableData.maxHeight);
+            
+            percentages.forEach(percentage => {
+                if (tableData.measurements[percentage]) {
+                    const volume = parseFloat(tableData.measurements[percentage].volume);
+                    const heightVal = parseFloat(tableData.measurements[percentage].height);
+                    if (!isNaN(volume) && !isNaN(heightVal)) {
+                        // Convert height to deadspace (distance from top)
+                        const deadspace = maxTankHeight - heightVal;
+                        dataPoints.push({ x: volume, y: deadspace });
+                    }
+                }
+            });
+            
+            if (dataPoints.length < 3) {
+                // Not enough data points for cubic regression
+                ctx.fillStyle = '#666';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Insufficient data points for regression analysis', width/2, height/2);
+                return;
+            }
+            
+            // Sort data points by volume (x)
+            dataPoints.sort((a, b) => a.x - b.x);
+            
+            // Find min/max for scaling
+            const minX = Math.min(...dataPoints.map(p => p.x));
+            const maxX = Math.max(...dataPoints.map(p => p.x));
+            const minY = Math.min(...dataPoints.map(p => p.y));
+            const maxY = Math.max(...dataPoints.map(p => p.y));
+            
+            // Add padding
+            const xRange = maxX - minX;
+            const yRange = maxY - minY;
+            const xPadding = xRange * 0.1;
+            const yPadding = yRange * 0.1;
+            
+            const plotMinX = minX - xPadding;
+            const plotMaxX = maxX + xPadding;
+            const plotMinY = minY - yPadding;
+            const plotMaxY = maxY + yPadding;
+            
+            // Calculate cubic regression coefficients using least squares
+            const coefficients = calculateCubicRegression(dataPoints);
+            
+            // Set up coordinate transformation
+            const margin = 40;
+            const plotWidth = width - 2 * margin;
+            const plotHeight = height - 2 * margin;
+            
+            function scaleX(x) {
+                return margin + (x - plotMinX) / (plotMaxX - plotMinX) * plotWidth;
+            }
+            
+            function scaleY(y) {
+                return height - margin - (y - plotMinY) / (plotMaxY - plotMinY) * plotHeight;
+            }
+            
+            // Draw axes
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 1;
+            
+            // X-axis
+            ctx.beginPath();
+            ctx.moveTo(margin, height - margin);
+            ctx.lineTo(width - margin, height - margin);
+            ctx.stroke();
+            
+            // Y-axis
+            ctx.beginPath();
+            ctx.moveTo(margin, margin);
+            ctx.lineTo(margin, height - margin);
+            ctx.stroke();
+            
+            // Draw grid lines
+            ctx.strokeStyle = '#f0f0f0';
+            ctx.lineWidth = 0.5;
+            
+            // Vertical grid lines
+            for (let i = 1; i < 5; i++) {
+                const x = margin + (i / 5) * plotWidth;
+                ctx.beginPath();
+                ctx.moveTo(x, margin);
+                ctx.lineTo(x, height - margin);
+                ctx.stroke();
+            }
+            
+            // Horizontal grid lines
+            for (let i = 1; i < 5; i++) {
+                const y = margin + (i / 5) * plotHeight;
+                ctx.beginPath();
+                ctx.moveTo(margin, y);
+                ctx.lineTo(width - margin, y);
+                ctx.stroke();
+            }
+            
+            // Draw regression curve
+            ctx.strokeStyle = '#2196F3';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            let firstPoint = true;
+            for (let x = plotMinX; x <= plotMaxX; x += (plotMaxX - plotMinX) / 200) {
+                const y = evaluateCubic(coefficients, x);
+                const screenX = scaleX(x);
+                const screenY = scaleY(y);
+                
+                if (firstPoint) {
+                    ctx.moveTo(screenX, screenY);
+                    firstPoint = false;
+                } else {
+                    ctx.lineTo(screenX, screenY);
+                }
+            }
+            ctx.stroke();
+            
+            // Draw data points
+            ctx.fillStyle = '#FF5722';
+            dataPoints.forEach(point => {
+                const screenX = scaleX(point.x);
+                const screenY = scaleY(point.y);
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, 4, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+            
+            // Add labels
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            
+            // X-axis label
+            ctx.fillText('Volume (Gallons)', width / 2, height - 10);
+            
+            // Y-axis label
+            ctx.save();
+            ctx.translate(15, height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Deadspace from Top (Inches)', 0, 0);
+            ctx.restore();
+            
+            // Add scale labels
+            ctx.font = '10px Arial';
+            ctx.fillStyle = '#666';
+            
+            // X-axis scale
+            for (let i = 0; i <= 4; i++) {
+                const x = plotMinX + (i / 4) * (plotMaxX - plotMinX);
+                const screenX = scaleX(x);
+                ctx.fillText(Math.round(x), screenX, height - margin + 15);
+            }
+            
+            // Y-axis scale
+            for (let i = 0; i <= 4; i++) {
+                const y = plotMinY + (i / 4) * (plotMaxY - plotMinY);
+                const screenY = scaleY(y);
+                ctx.textAlign = 'right';
+                ctx.fillText(Math.round(y * 10) / 10, margin - 5, screenY + 3);
+            }
+            
+            // Display equation
+            const a = coefficients.a.toExponential(3);
+            const b = coefficients.b.toFixed(6);
+            const c = coefficients.c.toFixed(3);
+            const d = coefficients.d.toFixed(1);
+            
+            const equation = `y = ${a}x³ + ${b}x² + ${c}x + ${d}`;
+            const equationText = document.getElementById('equationText');
+            if (equationText) {
+                equationText.textContent = equation;
+            }
+        }
+        
+        function calculateCubicRegression(dataPoints) {
+            const n = dataPoints.length;
+            
+            // For cubic regression y = ax³ + bx² + cx + d
+            // We need to solve the normal equations using matrix operations
+            // This is a simplified approach using least squares
+            
+            // Create matrices for normal equations
+            let sumX = 0, sumX2 = 0, sumX3 = 0, sumX4 = 0, sumX5 = 0, sumX6 = 0;
+            let sumY = 0, sumXY = 0, sumX2Y = 0, sumX3Y = 0;
+            
+            dataPoints.forEach(point => {
+                const x = point.x;
+                const y = point.y;
+                const x2 = x * x;
+                const x3 = x2 * x;
+                const x4 = x3 * x;
+                const x5 = x4 * x;
+                const x6 = x5 * x;
+                
+                sumX += x;
+                sumX2 += x2;
+                sumX3 += x3;
+                sumX4 += x4;
+                sumX5 += x5;
+                sumX6 += x6;
+                sumY += y;
+                sumXY += x * y;
+                sumX2Y += x2 * y;
+                sumX3Y += x3 * y;
+            });
+            
+            // Solve using Cramer's rule (simplified for demonstration)
+            // For a more robust solution, you'd use Gaussian elimination
+            
+            // Matrix A (coefficient matrix)
+            const A = [
+                [n, sumX, sumX2, sumX3],
+                [sumX, sumX2, sumX3, sumX4],
+                [sumX2, sumX3, sumX4, sumX5],
+                [sumX3, sumX4, sumX5, sumX6]
+            ];
+            
+            // Vector b (constants)
+            const b = [sumY, sumXY, sumX2Y, sumX3Y];
+            
+            // Solve Ax = b using simplified approach
+            // For demonstration, we'll use a basic approach
+            // In production, you'd use a proper linear algebra library
+            
+            const coefficients = solveLinearSystem(A, b);
+            
+            return {
+                d: coefficients[0],
+                c: coefficients[1],
+                b: coefficients[2],
+                a: coefficients[3]
+            };
+        }
+        
+        function solveLinearSystem(A, b) {
+            // Simplified Gaussian elimination
+            const n = A.length;
+            
+            // Forward elimination
+            for (let i = 0; i < n; i++) {
+                // Find pivot
+                let maxRow = i;
+                for (let k = i + 1; k < n; k++) {
+                    if (Math.abs(A[k][i]) > Math.abs(A[maxRow][i])) {
+                        maxRow = k;
+                    }
+                }
+                
+                // Swap rows
+                [A[i], A[maxRow]] = [A[maxRow], A[i]];
+                [b[i], b[maxRow]] = [b[maxRow], b[i]];
+                
+                // Make all rows below this one 0 in current column
+                for (let k = i + 1; k < n; k++) {
+                    const c = A[k][i] / A[i][i];
+                    for (let j = i; j < n; j++) {
+                        if (i === j) {
+                            A[k][j] = 0;
+                        } else {
+                            A[k][j] -= c * A[i][j];
+                        }
+                    }
+                    b[k] -= c * b[i];
+                }
+            }
+            
+            // Back substitution
+            const x = new Array(n).fill(0);
+            for (let i = n - 1; i >= 0; i--) {
+                x[i] = b[i];
+                for (let j = i + 1; j < n; j++) {
+                    x[i] -= A[i][j] * x[j];
+                }
+                x[i] /= A[i][i];
+            }
+            
+            return x;
+        }
+        
+        function evaluateCubic(coefficients, x) {
+            return coefficients.a * x * x * x + 
+                   coefficients.b * x * x + 
+                   coefficients.c * x + 
+                   coefficients.d;
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTLMIconBadge();
+        });
+    </script>
+</body>
+</html>

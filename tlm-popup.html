@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FSX - TLM Configuration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a4a52 0%, #2a6a72 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .main-container {
+            background: #2a5d66;
+            border-radius: 20px;
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .header h2 {
+            font-size: 20px;
+            font-weight: 500;
+        }
+
+        .tlm-icon {
+            width: 40px;
+            height: 40px;
+            background: #4CAF50;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .tlm-icon:hover {
+            transform: scale(1.05);
+        }
+
+        .tlm-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 999;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .overlay.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .popup {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        .popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .popup-header h3 {
+            color: #2a5d66;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #555;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .dropdown {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        .dropdown:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .text-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .barcode-btn {
+            background: #2a5d66;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .barcode-btn:hover {
+            background: #1a4d56;
+        }
+
+        .barcode-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-cancel {
+            background: white;
+            border: 2px solid #e0e0e0;
+            color: #666;
+        }
+
+        .btn-cancel:hover {
+            background: #f5f5f5;
+        }
+
+        .btn-save {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #45a049;
+        }
+
+        .photo-section {
+            margin-top: 25px;
+        }
+
+        .photo-uploads {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .photo-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .photo-label {
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .photo-upload-area {
+            position: relative;
+            height: 120px;
+            border: 2px dashed #d0d0d0;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            background: #f9f9f9;
+        }
+
+        .photo-upload-area:hover {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.05);
+        }
+
+        .photo-upload-area input[type="file"] {
+            display: none;
+        }
+
+        .photo-upload-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            cursor: pointer;
+            gap: 5px;
+        }
+
+        .camera-icon {
+            width: 30px;
+            height: 30px;
+            fill: #999;
+            transition: fill 0.3s ease;
+        }
+
+        .photo-upload-area:hover .camera-icon {
+            fill: #4CAF50;
+        }
+
+        .upload-text {
+            font-size: 11px;
+            color: #999;
+            transition: color 0.3s ease;
+        }
+
+        .photo-upload-area:hover .upload-text {
+            color: #4CAF50;
+        }
+
+        .photo-preview {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: white;
+        }
+
+        .photo-preview.active {
+            display: flex;
+        }
+
+        .photo-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .photo-preview .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .photo-preview:hover .remove-btn {
+            opacity: 1;
+        }
+
+        textarea.text-input {
+            width: 100%;
+            resize: vertical;
+            min-height: 60px;
+            font-family: inherit;
+        }
+
+        @media (max-width: 480px) {
+            .photo-uploads {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* TLM Overview Styles */
+        .tlm-overview-content {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .overview-comment {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 60px;
+            font-family: inherit;
+        }
+
+        .overview-comment::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .overview-comment:focus {
+            outline: none;
+            border-color: #4CAF50;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .overview-photos {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .overview-photo-box {
+            position: relative;
+        }
+
+        .overview-photo-box input[type="file"] {
+            display: none;
+        }
+
+        .overview-photo-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .overview-pic-preview {
+            width: 100%;
+            height: 100px;
+            border: 2px dashed rgba(255, 255, 255, 0.4);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .overview-pic-preview:hover {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .overview-pic-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .overview-camera-icon {
+            width: 35px;
+            height: 35px;
+            fill: rgba(255, 255, 255, 0.6);
+            transition: fill 0.3s ease;
+        }
+
+        .overview-pic-preview:hover .overview-camera-icon {
+            fill: #4CAF50;
+        }
+
+        .overview-pic-text {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 12px;
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        @media (max-width: 480px) {
+            .overview-photos {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .demo-content {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            color: white;
+        }
+
+        .demo-content h4 {
+            margin-bottom: 10px;
+        }
+
+        .demo-content p {
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .scan-animation {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 20px;
+            padding: 40px;
+            z-index: 1001;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .scan-animation.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .scan-animation svg {
+            width: 100px;
+            height: 100px;
+            fill: #4CAF50;
+            animation: pulse 1.5s infinite;
+        }
+
+        .scan-animation p {
+            color: white;
+            font-size: 18px;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="header">
+            <h2>Tank Input - 335X-36Z</h2>
+            <div class="tlm-icon" onclick="openPopup()">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2C11.45 2 11 2.45 11 3V5.08C8.16 5.57 6 8.03 6 11V17L4 19V20H20V19L18 17V11C18 8.03 15.84 5.57 13 5.08V3C13 2.45 12.55 2 12 2ZM12 7C14.21 7 16 8.79 16 11V18H8V11C8 8.79 9.79 7 12 7Z"/>
+                    <path d="M9 12H15V14H9V12Z"/>
+                    <path d="M12 4C12.55 4 13 3.55 13 3C13 2.45 12.55 2 12 2C11.45 2 11 2.45 11 3C11 3.55 11.45 4 12 4Z"/>
+                    <circle cx="18" cy="6" r="1.5" fill="#4CAF50"/>
+                    <circle cx="18" cy="6" r="3" fill="none" stroke="#4CAF50" stroke-width="0.5" opacity="0.6"/>
+                    <circle cx="18" cy="6" r="4.5" fill="none" stroke="#4CAF50" stroke-width="0.3" opacity="0.3"/>
+                </svg>
+            </div>
+        </div>
+        
+        <div class="tlm-overview-content">
+            <h4 style="color: white; margin-bottom: 15px;">TLM Correction Factor Comments</h4>
+            <textarea class="overview-comment" placeholder="Enter any correction factor notes..." rows="3"></textarea>
+            
+            <h4 style="color: white; margin-top: 20px; margin-bottom: 15px;">Photos</h4>
+            <div class="overview-photos">
+                <div class="overview-photo-box">
+                    <input type="file" id="overview-pic-setup" accept="image/*" onchange="handleOverviewPhoto(event, 'setup')">
+                    <label for="overview-pic-setup" class="overview-photo-label">
+                        <div class="overview-pic-preview" id="overview-preview-setup">
+                            <svg viewBox="0 0 24 24" class="overview-camera-icon">
+                                <path d="M12 2C11.1 2 10.3 2.6 9.8 3.4L9.2 4.5H6C4.9 4.5 4 5.4 4 6.5V18.5C4 19.6 4.9 20.5 6 20.5H18C19.1 20.5 20 19.6 20 18.5V6.5C20 5.4 19.1 4.5 18 4.5H14.8L14.2 3.4C13.7 2.6 12.9 2 12 2ZM12 7C14.8 7 17 9.2 17 12C17 14.8 14.8 17 12 17C9.2 17 7 14.8 7 12C7 9.2 9.2 7 12 7ZM12 9C10.3 9 9 10.3 9 12C9 13.7 10.3 15 12 15C13.7 15 15 13.7 15 12C15 10.3 13.7 9 12 9Z"/>
+                            </svg>
+                        </div>
+                        <span class="overview-pic-text">TLM & Tank Setup</span>
+                    </label>
+                </div>
+                
+                <div class="overview-photo-box">
+                    <input type="file" id="overview-pic-barcode" accept="image/*" onchange="handleOverviewPhoto(event, 'barcode')">
+                    <label for="overview-pic-barcode" class="overview-photo-label">
+                        <div class="overview-pic-preview" id="overview-preview-barcode">
+                            <svg viewBox="0 0 24 24" class="overview-camera-icon">
+                                <path d="M12 2C11.1 2 10.3 2.6 9.8 3.4L9.2 4.5H6C4.9 4.5 4 5.4 4 6.5V18.5C4 19.6 4.9 20.5 6 20.5H18C19.1 20.5 20 19.6 20 18.5V6.5C20 5.4 19.1 4.5 18 4.5H14.8L14.2 3.4C13.7 2.6 12.9 2 12 2ZM12 7C14.8 7 17 9.2 17 12C17 14.8 14.8 17 12 17C9.2 17 7 14.8 7 12C7 9.2 9.2 7 12 7ZM12 9C10.3 9 9 10.3 9 12C9 13.7 10.3 15 12 15C13.7 15 15 13.7 15 12C15 10.3 13.7 9 12 9Z"/>
+                            </svg>
+                        </div>
+                        <span class="overview-pic-text">TLM Barcode</span>
+                    </label>
+                </div>
+                
+                <div class="overview-photo-box">
+                    <input type="file" id="overview-pic-other" accept="image/*" onchange="handleOverviewPhoto(event, 'other')">
+                    <label for="overview-pic-other" class="overview-photo-label">
+                        <div class="overview-pic-preview" id="overview-preview-other">
+                            <svg viewBox="0 0 24 24" class="overview-camera-icon">
+                                <path d="M12 2C11.1 2 10.3 2.6 9.8 3.4L9.2 4.5H6C4.9 4.5 4 5.4 4 6.5V18.5C4 19.6 4.9 20.5 6 20.5H18C19.1 20.5 20 19.6 20 18.5V6.5C20 5.4 19.1 4.5 18 4.5H14.8L14.2 3.4C13.7 2.6 12.9 2 12 2ZM12 7C14.8 7 17 9.2 17 12C17 14.8 14.8 17 12 17C9.2 17 7 14.8 7 12C7 9.2 9.2 7 12 7ZM12 9C10.3 9 9 10.3 9 12C9 13.7 10.3 15 12 15C13.7 15 15 13.7 15 12C15 10.3 13.7 9 12 9Z"/>
+                            </svg>
+                        </div>
+                        <span class="overview-pic-text">Other</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay">
+        <div class="popup">
+            <div class="popup-header">
+                <h3>Configure TLM</h3>
+                <button class="close-btn" onclick="closePopup()">&times;</button>
+            </div>
+            
+            <div class="form-group">
+                <label for="provider">Provider</label>
+                <select id="provider" class="dropdown">
+                    <option value="">Select a provider</option>
+                    <option value="tekelek">Tekelek</option>
+                    <option value="multitech">MultiTech</option>
+                    <option value="wellaware">Wellaware</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="tlm-id">TLM ID</label>
+                <div class="input-group">
+                    <input type="text" id="tlm-id" class="text-input" placeholder="Enter TLM ID or scan barcode">
+                    <button class="barcode-btn" onclick="scanBarcode()" title="Scan Barcode">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 6H6V18H4V6M7 6H8V18H7V6M9 6H12V18H9V6M13 6H14V18H13V6M16 6H18V18H16V6M19 6H20V18H19V6M2 4V8H0V4C0 2.9 0.9 2 2 2H6V4H2M22 2C23.1 2 24 2.9 24 4V8H22V4H18V2H22M2 16V20H6V22H2C0.9 22 0 21.1 0 20V16H2M22 20V16H24V20C24 21.1 23.1 22 22 22H18V20H22Z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="correction-factor">TLM Correction Factor Comment</label>
+                <textarea id="correction-factor" class="text-input" rows="3" placeholder="Enter any correction factor notes..."></textarea>
+            </div>
+            
+            <div class="form-group photo-section">
+                <label style="font-size: 16px; font-weight: 600; color: #333; margin-bottom: 10px; display: block;">Photos</label>
+                <div class="photo-uploads">
+                    <div class="photo-item">
+                        <label class="photo-label">TLM & Tank Setup</label>
+                        <div class="photo-upload-area">
+                            <input type="file" id="pic-setup" accept="image/*" onchange="handlePhotoUpload(event, 'setup')">
+                            <label for="pic-setup" class="photo-upload-btn">
+                                <svg viewBox="0 0 24 24" class="camera-icon">
+                                    <path d="M12 2C11.1 2 10.3 2.6 9.8 3.4L9.2 4.5H6C4.9 4.5 4 5.4 4 6.5V18.5C4 19.6 4.9 20.5 6 20.5H18C19.1 20.5 20 19.6 20 18.5V6.5C20 5.4 19.1 4.5 18 4.5H14.8L14.2 3.4C13.7 2.6 12.9 2 12 2ZM12 7C14.8 7 17 9.2 17 12C17 14.8 14.8 17 12 17C9.2 17 7 14.8 7 12C7 9.2 9.2 7 12 7ZM12 9C10.3 9 9 10.3 9 12C9 13.7 10.3 15 12 15C13.7 15 15 13.7 15 12C15 10.3 13.7 9 12 9Z"/>
+                                </svg>
+                                <span class="upload-text">Click to upload</span>
+                            </label>
+                            <div class="photo-preview" id="preview-setup"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="photo-item">
+                        <label class="photo-label">TLM Barcode</label>
+                        <div class="photo-upload-area">
+                            <input type="file" id="pic-barcode" accept="image/*" onchange="handlePhotoUpload(event, 'barcode')">
+                            <label for="pic-barcode" class="photo-upload-btn">
+                                <svg viewBox="0 0 24 24" class="camera-icon">
+                                    <path d="M12 2C11.1 2 10.3 2.6 9.8 3.4L9.2 4.5H6C4.9 4.5 4 5.4 4 6.5V18.5C4 19.6 4.9 20.5 6 20.5H18C19.1 20.5 20 19.6 20 18.5V6.5C20 5.4 19.1 4.5 18 4.5H14.8L14.2 3.4C13.7 2.6 12.9 2 12 2ZM12 7C14.8 7 17 9.2 17 12C17 14.8 14.8 17 12 17C9.2 17 7 14.8 7 12C7 9.2 9.2 7 12 7ZM12 9C10.3 9 9 10.3 9 12C9 13.7 10.3 15 12 15C13.7 15 15 13.7 15 12C15 10.3 13.7 9 12 9Z"/>
+                                </svg>
+                                <span class="upload-text">Click to upload</span>
+                            </label>
+                            <div class="photo-preview" id="preview-barcode"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="photo-item">
+                        <label class="photo-label">Other</label>
+                        <div class="photo-upload-area">
+                            <input type="file" id="pic-other" accept="image/*" onchange="handlePhotoUpload(event, 'other')">
+                            <label for="pic-other" class="photo-upload-btn">
+                                <svg viewBox="0 0 24 24" class="camera-icon">
+                                    <path d="M12 2C11.1 2 10.3 2.6 9.8 3.4L9.2 4.5H6C4.9 4.5 4 5.4 4 6.5V18.5C4 19.6 4.9 20.5 6 20.5H18C19.1 20.5 20 19.6 20 18.5V6.5C20 5.4 19.1 4.5 18 4.5H14.8L14.2 3.4C13.7 2.6 12.9 2 12 2ZM12 7C14.8 7 17 9.2 17 12C17 14.8 14.8 17 12 17C9.2 17 7 14.8 7 12C7 9.2 9.2 7 12 7ZM12 9C10.3 9 9 10.3 9 12C9 13.7 10.3 15 12 15C13.7 15 15 13.7 15 12C15 10.3 13.7 9 12 9Z"/>
+                                </svg>
+                                <span class="upload-text">Click to upload</span>
+                            </label>
+                            <div class="photo-preview" id="preview-other"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-cancel" onclick="closePopup()">Cancel</button>
+                <button class="btn btn-save" onclick="saveConfiguration()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="scan-animation" id="scanAnimation">
+        <svg viewBox="0 0 24 24">
+            <path d="M4 6H6V18H4V6M7 6H8V18H7V6M9 6H12V18H9V6M13 6H14V18H13V6M16 6H18V18H16V6M19 6H20V18H19V6M2 4V8H0V4C0 2.9 0.9 2 2 2H6V4H2M22 2C23.1 2 24 2.9 24 4V8H22V4H18V2H22M2 16V20H6V22H2C0.9 22 0 21.1 0 20V16H2M22 20V16H24V20C24 21.1 23.1 22 22 22H18V20H22Z"/>
+        </svg>
+        <p>Scanning barcode...</p>
+    </div>
+
+    <script>
+        function handleOverviewPhoto(event, type) {
+            const file = event.target.files[0];
+            if (!file || !file.type.startsWith('image/')) {
+                alert('Please select a valid image file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById(`overview-preview-${type}`);
+                preview.innerHTML = `<img src="${e.target.result}" alt="${type} image">`;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function openPopup() {
+            document.getElementById('overlay').classList.add('active');
+        }
+
+        function closePopup() {
+            document.getElementById('overlay').classList.remove('active');
+            clearForm();
+        }
+
+        function clearForm() {
+            document.getElementById('provider').value = '';
+            document.getElementById('tlm-id').value = '';
+            document.getElementById('correction-factor').value = '';
+            // Clear all photo previews
+            ['setup', 'barcode', 'other'].forEach(type => {
+                const preview = document.getElementById(`preview-${type}`);
+                preview.classList.remove('active');
+                preview.innerHTML = '';
+                document.getElementById(`pic-${type}`).value = '';
+            });
+        }
+
+        function scanBarcode() {
+            const scanAnimation = document.getElementById('scanAnimation');
+            scanAnimation.classList.add('active');
+            
+            setTimeout(() => {
+                scanAnimation.classList.remove('active');
+                
+                const mockBarcodeData = 'TLM-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+                document.getElementById('tlm-id').value = mockBarcodeData;
+                
+                const input = document.getElementById('tlm-id');
+                input.style.borderColor = '#4CAF50';
+                setTimeout(() => {
+                    input.style.borderColor = '#e0e0e0';
+                }, 1500);
+            }, 2000);
+        }
+
+        function handlePhotoUpload(event, type) {
+            const file = event.target.files[0];
+            if (!file || !file.type.startsWith('image/')) {
+                alert('Please select a valid image file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById(`preview-${type}`);
+                preview.innerHTML = `
+                    <img src="${e.target.result}" alt="${type} preview">
+                    <button class="remove-btn" onclick="removePhoto('${type}')">&times;</button>
+                `;
+                preview.classList.add('active');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removePhoto(type) {
+            const preview = document.getElementById(`preview-${type}`);
+            preview.classList.remove('active');
+            preview.innerHTML = '';
+            document.getElementById(`pic-${type}`).value = '';
+        }
+
+        function saveConfiguration() {
+            const provider = document.getElementById('provider').value;
+            const tlmId = document.getElementById('tlm-id').value;
+            const correctionFactor = document.getElementById('correction-factor').value;
+            
+            if (!provider) {
+                alert('Please select a provider');
+                return;
+            }
+            
+            if (!tlmId) {
+                alert('Please enter or scan a TLM ID');
+                return;
+            }
+            
+            // Collect photo data
+            const photos = {
+                setup: document.getElementById('pic-setup').files[0] ? 'TLM & Tank Setup photo uploaded' : 'No photo',
+                barcode: document.getElementById('pic-barcode').files[0] ? 'TLM Barcode photo uploaded' : 'No photo',
+                other: document.getElementById('pic-other').files[0] ? 'Other photo uploaded' : 'No photo'
+            };
+            
+            console.log('Configuration saved:', {
+                provider: provider,
+                tlmId: tlmId,
+                correctionFactor: correctionFactor,
+                photos: photos
+            });
+            
+            alert(`TLM Configuration Saved!\n\nProvider: ${provider}\nTLM ID: ${tlmId}\nCorrection Factor: ${correctionFactor || 'None'}\n\nPhotos:\n- ${photos.setup}\n- ${photos.barcode}\n- ${photos.other}`);
+            closePopup();
+        }
+
+        document.getElementById('overlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePopup();
+            }
+        });
+    </script>
+</body>
+</html>

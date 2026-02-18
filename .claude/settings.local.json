@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(az:*)",
+      "Bash(command -v:*)",
+      "Bash(curl:*)",
+      "Bash(sudo bash)"
+    ]
+  }
+}

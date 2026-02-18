@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>FSX - TLM Overview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .mobile-frame {
+            width: 100%;
+            max-width: 430px;
+            margin: 0 auto;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .status-bar {
+            background: #0d4f5c;
+            padding: 8px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .header {
+            background: #0d4f5c;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .back-arrow {
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        /* TLM Overview Section */
+        .tlm-overview-section {
+            background: linear-gradient(135deg, #1a4a52 0%, #2a6a72 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .tlm-overview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .tlm-overview-header h2 {
+            color: white;
+            font-size: 22px;
+            font-weight: 500;
+        }
+
+        .tlm-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .tlm-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4CAF50;
+            box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 8px rgba(76, 175, 80, 0.6); }
+            50% { box-shadow: 0 0 16px rgba(76, 175, 80, 0.8); }
+            100% { box-shadow: 0 0 8px rgba(76, 175, 80, 0.6); }
+        }
+
+        .tlm-overview-content {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .tlm-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .tlm-info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .tlm-info-item label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .tlm-info-item span {
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .tlm-config-section {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+        }
+
+        .tlm-config-section h4 {
+            color: white;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .dropdown, .text-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .dropdown:focus, .text-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .dropdown option {
+            background: #2a6a72;
+            color: white;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .barcode-btn {
+            background: #2a5d66;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .barcode-btn:hover {
+            background: #1a4d56;
+        }
+
+        .barcode-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .tlm-correction-section, .tlm-photos-section {
+            margin-bottom: 20px;
+        }
+
+        .tlm-correction-section h4, .tlm-photos-section h4 {
+            color: white;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+
+        .tlm-correction-comment {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 60px;
+            font-family: inherit;
+        }
+
+        .tlm-correction-comment::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .tlm-correction-comment:focus {
+            outline: none;
+            border-color: #4CAF50;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .tlm-photos-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .tlm-photo-box {
+            position: relative;
+        }
+
+        .tlm-photo-box input[type="file"] {
+            display: none;
+        }
+
+        .tlm-photo-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            gap: 8px;
+        }
+
+        .tlm-pic-preview {
+            width: 100%;
+            height: 100px;
+            border: 2px dashed rgba(255, 255, 255, 0.4);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tlm-pic-preview:hover {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .tlm-pic-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .tlm-camera-icon {
+            width: 35px;
+            height: 35px;
+            fill: rgba(255, 255, 255, 0.6);
+            transition: fill 0.3s ease;
+        }
+
+        .tlm-pic-preview:hover .tlm-camera-icon {
+            fill: #4CAF50;
+        }
+
+        .tlm-pic-text {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 11px;
+            text-align: center;
+        }
+
+        .tlm-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .tlm-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+            display: inline-block;
+        }
+
+        .tlm-btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .tlm-btn-primary:hover {
+            background: #45a049;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+
+        .tlm-btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .tlm-btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        @media (max-width: 480px) {
+            .tlm-info {
+                grid-template-columns: 1fr;
+            }
+            
+            .tlm-photos-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-frame">
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span>9:41</span>
+            <span>5G</span>
+        </div>
+
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <span class="back-arrow">←</span>
+                <h1 class="header-title">TLM Overview</h1>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- TLM Overview Section -->
+            <div class="tlm-overview-section">
+                <div class="tlm-overview-header">
+                    <h2>TLM Overview</h2>
+                    <div class="tlm-status">
+                        <span class="tlm-indicator"></span>
+                        <span>Active</span>
+                    </div>
+                </div>
+                
+                <div class="tlm-overview-content">
+                    <div class="tlm-info">
+                        <div class="tlm-info-item">
+                            <label>Tank:</label>
+                            <span id="tlm-tank-id">335X-36Z</span>
+                        </div>
+                        <div class="tlm-info-item">
+                            <label>Provider:</label>
+                            <span id="tlm-provider">Not Set</span>
+                        </div>
+                        <div class="tlm-info-item">
+                            <label>TLM ID:</label>
+                            <span id="tlm-id">Not Set</span>
+                        </div>
+                    </div>
+
+                    <!-- TLM Configuration -->
+                    <div class="tlm-config-section" id="tlmConfigSection" style="display: none;">
+                        <h4>TLM Configuration</h4>
+                        
+                        <div class="form-group">
+                            <label for="provider">Provider</label>
+                            <select id="provider" class="dropdown" onchange="handleProviderChange()">
+                                <option value="">Select a provider</option>
+                                <option value="tekelek">Tekelek</option>
+                                <option value="multitech">MultiTech</option>
+                                <option value="wellaware">Wellaware</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="tlm-device-id">TLM ID</label>
+                            <div class="input-group">
+                                <input type="text" id="tlm-device-id" class="text-input" placeholder="Enter TLM ID or scan barcode">
+                                <button class="barcode-btn" onclick="scanBarcode()" title="Scan Barcode">
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M4 6H6V18H4V6M7 6H8V18H7V6M9 6H12V18H9V6M13 6H14V18H13V6M16 6H18V18H16V6M19 6H20V18H19V6M2 4V8H0V4C0 2.9 0.9 2 2 2H6V4H2M22 2C23.1 2 24 2.9 24 4V8H22V4H18V2H22M2 16V20H6V22H2C0.9 22 0 21.1 0 20V16H2M22 20V16H24V20C24 21.1 23.1 22 22 22H18V20H22Z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TLM Correction Factor Comments -->
+                    <div class="tlm-correction-section">
+                        <h4>TLM Correction Factor Comments</h4>
+                        <textarea class="tlm-correction-comment" id="tlmCorrectionComment" placeholder="Enter any correction factor notes..." rows="3"></textarea>
+                    </div>
+                    
+                    <!-- Photos Section -->
+                    <div class="tlm-photos-section">
+                        <h4>Photos</h4>
+                        <div class="tlm-photos-grid">
+                            <div class="tlm-photo-box">
+                                <input type="file" id="tlm-pic-setup" accept="image/*" onchange="handleTLMPhoto(event, 'setup')">
+                                <label for="tlm-pic-setup" class="tlm-photo-label">
+                                    <div class="tlm-pic-preview" id="tlm-preview-setup">
+                                        <svg viewBox="0 0 24 24" class="tlm-camera-icon">
+                                            <path d="M12 2C11.1 2 10.3 2.6 9.8 3.4L9.2 4.5H6C4.9 4.5 4 5.4 4 6.5V18.5C4 19.6 4.9 20.5 6 20.5H18C19.1 20.5 20 19.6 20 18.5V6.5C20 5.4 19.1 4.5 18 4.5H14.8L14.2 3.4C13.7 2.6 12.9 2 12 2ZM12 7C14.8 7 17 9.2 17 12C17 14.8 14.8 17 12 17C9.2 17 7 14.8 7 12C7 9.2 9.2 7 12 7ZM12 9C10.3 9 9 10.3 9 12C9 13.7 10.3 15 12 15C13.7 15 15 13.7 15 12C15 10.3 13.7 9 12 9Z"/>
+                                        </svg>
+                                    </div>
+                                    <span class="tlm-pic-text">TLM & Tank Setup</span>
+                                </label>
+                            </div>
+                            
+                            <div class="tlm-photo-box">
+                                <input type="file" id="tlm-pic-barcode" accept="image/*" onchange="handleTLMPhoto(event, 'barcode')">
+                                <label for="tlm-pic-barcode" class="tlm-photo-label">
+                                    <div class="tlm-pic-preview" id="tlm-preview-barcode">
+                                        <svg viewBox="0 0 24 24" class="tlm-camera-icon">
+                                            <path d="M12 2C11.1 2 10.3 2.6 9.8 3.4L9.2 4.5H6C4.9 4.5 4 5.4 4 6.5V18.5C4 19.6 4.9 20.5 6 20.5H18C19.1 20.5 20 19.6 20 18.5V6.5C20 5.4 19.1 4.5 18 4.5H14.8L14.2 3.4C13.7 2.6 12.9 2 12 2ZM12 7C14.8 7 17 9.2 17 12C17 14.8 14.8 17 12 17C9.2 17 7 14.8 7 12C7 9.2 9.2 7 12 7ZM12 9C10.3 9 9 10.3 9 12C9 13.7 10.3 15 12 15C13.7 15 15 13.7 15 12C15 10.3 13.7 9 12 9Z"/>
+                                        </svg>
+                                    </div>
+                                    <span class="tlm-pic-text">TLM Barcode</span>
+                                </label>
+                            </div>
+                            
+                            <div class="tlm-photo-box">
+                                <input type="file" id="tlm-pic-other" accept="image/*" onchange="handleTLMPhoto(event, 'other')">
+                                <label for="tlm-pic-other" class="tlm-photo-label">
+                                    <div class="tlm-pic-preview" id="tlm-preview-other">
+                                        <svg viewBox="0 0 24 24" class="tlm-camera-icon">
+                                            <path d="M12 2C11.1 2 10.3 2.6 9.8 3.4L9.2 4.5H6C4.9 4.5 4 5.4 4 6.5V18.5C4 19.6 4.9 20.5 6 20.5H18C19.1 20.5 20 19.6 20 18.5V6.5C20 5.4 19.1 4.5 18 4.5H14.8L14.2 3.4C13.7 2.6 12.9 2 12 2ZM12 7C14.8 7 17 9.2 17 12C17 14.8 14.8 17 12 17C9.2 17 7 14.8 7 12C7 9.2 9.2 7 12 7ZM12 9C10.3 9 9 10.3 9 12C9 13.7 10.3 15 12 15C13.7 15 15 13.7 15 12C15 10.3 13.7 9 12 9Z"/>
+                                        </svg>
+                                    </div>
+                                    <span class="tlm-pic-text">Other</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="tlm-actions">
+                        <button class="tlm-btn tlm-btn-primary" onclick="toggleConfiguration()">Configure TLM</button>
+                        <button class="tlm-btn tlm-btn-secondary" onclick="saveConfiguration()">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // TLM state management
+        let tlmState = {
+            provider: null,
+            deviceId: null,
+            correctionFactor: '',
+            photos: {}
+        };
+
+        // Handle provider change
+        function handleProviderChange() {
+            const provider = document.getElementById('provider').value;
+            const providerSpan = document.getElementById('tlm-provider');
+            
+            if (provider) {
+                providerSpan.textContent = provider.charAt(0).toUpperCase() + provider.slice(1);
+                tlmState.provider = provider;
+                
+                // Show configuration section
+                document.getElementById('tlmConfigSection').style.display = 'block';
+            } else {
+                providerSpan.textContent = 'Not Set';
+                tlmState.provider = null;
+                document.getElementById('tlmConfigSection').style.display = 'none';
+            }
+        }
+
+        // Handle TLM photo uploads
+        function handleTLMPhoto(event, type) {
+            const file = event.target.files[0];
+            if (!file || !file.type.startsWith('image/')) {
+                alert('Please select a valid image file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById(`tlm-preview-${type}`);
+                preview.innerHTML = `<img src="${e.target.result}" alt="${type} image">`;
+                
+                // Store in TLM state
+                tlmState.photos[type] = {
+                    file: file,
+                    dataUrl: e.target.result,
+                    uploadedAt: new Date().toISOString()
+                };
+                
+                // Show feedback
+                const text = preview.parentElement.querySelector('.tlm-pic-text');
+                const originalText = text.textContent;
+                text.textContent = 'Uploaded ✓';
+                text.style.color = '#4CAF50';
+                
+                setTimeout(() => {
+                    text.textContent = originalText;
+                    text.style.color = 'rgba(255, 255, 255, 0.9)';
+                }, 2000);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Toggle configuration section
+        function toggleConfiguration() {
+            const configSection = document.getElementById('tlmConfigSection');
+            if (configSection.style.display === 'none' || !configSection.style.display) {
+                configSection.style.display = 'block';
+            } else {
+                configSection.style.display = 'none';
+            }
+        }
+
+        // Simulate barcode scanning
+        function scanBarcode() {
+            const mockBarcodeData = 'TLM-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+            document.getElementById('tlm-device-id').value = mockBarcodeData;
+            document.getElementById('tlm-id').textContent = mockBarcodeData;
+            tlmState.deviceId = mockBarcodeData;
+            
+            // Visual feedback
+            const input = document.getElementById('tlm-device-id');
+            input.style.borderColor = '#4CAF50';
+            setTimeout(() => {
+                input.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+            }, 1500);
+        }
+
+        // Save configuration
+        function saveConfiguration() {
+            const provider = document.getElementById('provider').value;
+            const deviceId = document.getElementById('tlm-device-id').value;
+            const correctionFactor = document.getElementById('tlmCorrectionComment').value;
+            
+            if (!provider) {
+                alert('Please select a provider');
+                return;
+            }
+            
+            if (!deviceId) {
+                alert('Please enter or scan a TLM ID');
+                return;
+            }
+            
+            // Update display
+            document.getElementById('tlm-provider').textContent = provider.charAt(0).toUpperCase() + provider.slice(1);
+            document.getElementById('tlm-id').textContent = deviceId;
+            
+            // Update state
+            tlmState.provider = provider;
+            tlmState.deviceId = deviceId;
+            tlmState.correctionFactor = correctionFactor;
+            
+            // Collect photo data
+            const photos = {
+                setup: tlmState.photos.setup ? 'TLM & Tank Setup photo uploaded' : 'No photo',
+                barcode: tlmState.photos.barcode ? 'TLM Barcode photo uploaded' : 'No photo',
+                other: tlmState.photos.other ? 'Other photo uploaded' : 'No photo'
+            };
+            
+            console.log('TLM Configuration saved:', {
+                provider: provider,
+                deviceId: deviceId,
+                correctionFactor: correctionFactor,
+                photos: photos
+            });
+            
+            alert(`TLM Configuration Saved!\n\nProvider: ${provider}\nTLM ID: ${deviceId}\nCorrection Factor: ${correctionFactor || 'None'}\n\nPhotos:\n- ${photos.setup}\n- ${photos.barcode}\n- ${photos.other}`);
+            
+            // Hide configuration section after save
+            document.getElementById('tlmConfigSection').style.display = 'none';
+        }
+
+        // Update TLM ID when typed manually
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('tlm-device-id').addEventListener('input', function(e) {
+                const value = e.target.value;
+                document.getElementById('tlm-id').textContent = value || 'Not Set';
+                tlmState.deviceId = value;
+            });
+        });
+    </script>
+</body>
+</html>

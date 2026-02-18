@@ -1,0 +1,1962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>FSX - Tank Input with Enhanced TLM</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .mobile-frame {
+            width: 100%;
+            max-width: 430px;
+            margin: 0 auto;
+            background: #f5f5f5;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .status-bar {
+            background: #0d4f5c;
+            padding: 8px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .signal-bars {
+            display: flex;
+            gap: 2px;
+            align-items: flex-end;
+        }
+
+        .signal-bar {
+            width: 3px;
+            background: white;
+            border-radius: 1px;
+        }
+
+        .battery {
+            width: 24px;
+            height: 12px;
+            border: 1px solid white;
+            border-radius: 2px;
+            position: relative;
+            padding: 1px;
+        }
+
+        .battery::after {
+            content: '';
+            position: absolute;
+            right: -3px;
+            top: 3px;
+            width: 2px;
+            height: 6px;
+            background: white;
+            border-radius: 0 1px 1px 0;
+        }
+
+        .battery-fill {
+            width: 75%;
+            height: 100%;
+            background: white;
+            border-radius: 1px;
+        }
+
+        .header {
+            background: #0d4f5c;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .back-arrow {
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 400;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+
+        .header-icon:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tlm-icon {
+            width: 50px;
+            height: 50px;
+            background: #4CAF50;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .tlm-icon.grey {
+            background: #9E9E9E;
+        }
+        
+        .tlm-icon.grey svg {
+            color: white;
+        }
+
+        .tlm-icon.green {
+            background: #4CAF50;
+        }
+        
+        .tlm-icon.green svg {
+            color: white;
+        }
+
+        .tlm-icon.red {
+            background: #F44336;
+        }
+        
+        .tlm-icon.red svg {
+            color: white;
+        }
+
+        .tlm-icon:hover {
+            transform: scale(1.05);
+        }
+
+        .tlm-icon svg {
+            width: 28px;
+            height: 28px;
+            color: white;
+        }
+        
+        .tlm-icon.grey svg .disconnect-line {
+            display: block !important;
+        }
+
+        .signal-waves {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 20px;
+            height: 20px;
+        }
+
+        .wave {
+            position: absolute;
+            border: 2px solid currentColor;
+            border-radius: 50%;
+            opacity: 0;
+            animation: wave-animation 2s infinite;
+        }
+
+        .tlm-icon.grey .wave {
+            display: none;
+        }
+
+        .tlm-icon.green .wave {
+            border-color: #4CAF50;
+        }
+
+        .tlm-icon.red .wave {
+            border-color: #F44336;
+            animation: wave-animation-error 1s infinite;
+        }
+
+        .wave:nth-child(1) {
+            width: 10px;
+            height: 10px;
+            top: 5px;
+            left: 5px;
+        }
+
+        .wave:nth-child(2) {
+            width: 20px;
+            height: 20px;
+            top: 0;
+            left: 0;
+            animation-delay: 0.5s;
+        }
+
+        @keyframes wave-animation {
+            0% {
+                opacity: 0.6;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(1.5);
+            }
+        }
+
+        @keyframes wave-animation-error {
+            0%, 100% {
+                opacity: 0.8;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.3;
+                transform: scale(1.1);
+            }
+        }
+
+        .content {
+            padding: 20px;
+            padding-bottom: 100px;
+            background: #f5f5f5;
+        }
+
+        .tank-info {
+            background: #536569;
+            border-radius: 0;
+            padding: 15px 20px;
+            margin: 0 -20px 20px -20px;
+            color: white;
+        }
+
+        .tank-header {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .tank-subtitle {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .order-info {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .order-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .order-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .order-label {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .order-value {
+            font-size: 18px;
+            font-weight: 500;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .order-date {
+            background: #ff6b35;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .days-info {
+            color: #ff6b35;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .location-icon {
+            width: 24px;
+            height: 24px;
+            fill: #2196F3;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .metric-title {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .metric-subtitle {
+            color: #999;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .tank-visual {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .tank-container {
+            width: 100%;
+            height: 100%;
+            background: #e8e9ea;
+            border: 2px solid #999;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tank-fill {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 95%;
+            background: linear-gradient(180deg, #4CAF50 0%, #45a049 100%);
+            transition: height 0.5s ease;
+        }
+
+        .tank-markers {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .tank-marker {
+            position: absolute;
+            white-space: nowrap;
+        }
+
+        .tank-marker.high {
+            top: -30px;
+        }
+
+        .tank-marker.low {
+            bottom: -30px;
+        }
+
+        .tank-size-label {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .variance-value {
+            color: #f44336;
+            font-weight: 600;
+        }
+
+        .injection-section {
+            background: #326a75;
+            margin: 0 -20px 20px -20px;
+            padding: 15px 20px;
+            color: white;
+        }
+
+        .injection-header {
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+
+        .injection-point {
+            background: #e8e9ea;
+            border-radius: 10px;
+            padding: 15px;
+            color: #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .injection-name {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .injection-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .injection-details {
+            background: #f8f8f8;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+
+        .injection-detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .injection-detail-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-label {
+            color: #666;
+        }
+
+        .detail-value {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .rate-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+            background: #f8f8f8;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .rate-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .rate-input-label {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .rate-input {
+            background: #e8e9ea;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 18px;
+            font-weight: 500;
+            text-align: center;
+            color: #333;
+        }
+
+        .action-buttons {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 20px;
+            display: flex;
+            gap: 15px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            max-width: 430px;
+            margin: 0 auto;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-cancel {
+            background: white;
+            border: 2px solid #ff6b35;
+            color: #ff6b35;
+        }
+
+        .btn-save {
+            background: #9e9e9e;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* TLM Bottom Panel */
+        .tlm-panel-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .tlm-panel-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .tlm-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            max-width: 430px;
+            margin: 0 auto;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.2);
+        }
+
+        .tlm-panel.active {
+            transform: translateY(0);
+        }
+
+        .tlm-panel-handle {
+            width: 40px;
+            height: 4px;
+            background: #ccc;
+            border-radius: 2px;
+            margin: 12px auto 8px;
+            cursor: pointer;
+        }
+
+        .tlm-panel-header {
+            padding: 0 25px 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .tlm-panel-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2a5d66;
+            margin: 0;
+        }
+
+        .tlm-panel-subtitle {
+            font-size: 16px;
+            color: #666;
+            margin: 5px 0 0;
+        }
+
+        .tlm-panel-content {
+            padding: 20px 25px;
+        }
+
+        .tlm-section {
+            margin-bottom: 25px;
+        }
+
+        .tlm-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .tlm-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tlm-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        .tlm-status-icon {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .tlm-status-icon.assigned {
+            background: #4CAF50;
+        }
+
+        .tlm-status-icon.warning {
+            background: #FF9800;
+        }
+
+        .tlm-status-icon.error {
+            background: #F44336;
+        }
+
+        .tlm-status-icon.unassigned {
+            background: #9E9E9E;
+        }
+
+        .tlm-status-text {
+            flex: 1;
+        }
+
+        .tlm-status-primary {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .tlm-status-secondary {
+            color: #666;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        .tlm-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .tlm-action-btn {
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: white;
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tlm-action-btn:hover:not(:disabled) {
+            border-color: #4CAF50;
+            background: #f8f9fa;
+        }
+
+        .tlm-action-btn.primary {
+            background: #4CAF50;
+            border-color: #4CAF50;
+            color: white;
+        }
+
+        .tlm-action-btn.primary:hover:not(:disabled) {
+            background: #45a049;
+        }
+
+        .tlm-action-btn.danger {
+            border-color: #F44336;
+            color: #F44336;
+        }
+
+        .tlm-action-btn.danger:hover:not(:disabled) {
+            background: #ffebee;
+        }
+
+        .tlm-action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #555;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .form-group label .required {
+            color: #F44336;
+        }
+
+        .dropdown {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        .dropdown:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .dropdown.error {
+            border-color: #F44336;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .text-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            position: relative;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .text-input.error {
+            border-color: #F44336;
+        }
+
+        .barcode-btn {
+            background: #2a5d66;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 50px;
+        }
+
+        .barcode-btn:hover:not(:disabled) {
+            background: #1a4d56;
+        }
+
+        .barcode-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .barcode-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .test-btn {
+            background: #2196F3;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-top: 5px;
+        }
+
+        .test-btn:hover:not(:disabled) {
+            background: #1976D2;
+        }
+
+        .test-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .test-result {
+            margin-top: 10px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .test-result.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #4CAF50;
+        }
+
+        .test-result.warning {
+            background: #fff3e0;
+            color: #e65100;
+            border: 1px solid #FF9800;
+        }
+
+        .test-result.error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #F44336;
+        }
+
+        .progressive-fields {
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .progressive-fields.active {
+            opacity: 1;
+            max-height: 1000px;
+        }
+
+        .strapping-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .strapping-dropdown {
+            flex: 1;
+        }
+
+        .new-btn {
+            background: #2196F3;
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .new-btn:hover:not(:disabled) {
+            background: #1976D2;
+        }
+
+        .new-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .number-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .number-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .number-input.error {
+            border-color: #F44336;
+        }
+
+        .correction-info {
+            background: #e3f2fd;
+            border: 1px solid #2196F3;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 8px;
+            font-size: 13px;
+            color: #1565c0;
+        }
+
+        .validation-error {
+            color: #F44336;
+            font-size: 12px;
+            margin-top: 5px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .typeahead-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .typeahead-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .typeahead-item:last-child {
+            border-bottom: none;
+        }
+
+        .typeahead-item:hover {
+            background: #f8f9fa;
+        }
+
+        .typeahead-item.selected {
+            background: #e3f2fd;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .info-value {
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,0.1);
+            border-top-color: #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Strapping Table Modal Styles */
+        .strapping-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .strapping-modal.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .strapping-modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        .strapping-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .strapping-modal-header h3 {
+            color: #2a5d66;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .strapping-table-form {
+            display: grid;
+            gap: 20px;
+        }
+
+        .table-name-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+
+        .table-name-input.error {
+            border-color: #F44336;
+        }
+
+        .tank-params {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .percentage-table {
+            margin-top: 20px;
+        }
+
+        .table-header {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 8px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .table-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .percentage-label {
+            font-weight: 500;
+            color: #333;
+            text-align: center;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            font-size: 16px;
+            line-height: 1.2;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .calculated-height {
+            text-align: center;
+            padding: 10px;
+            background: #e8f5e8;
+            border-radius: 6px;
+            font-weight: 500;
+            color: #2e7d2e;
+            font-size: 16px;
+            line-height: 1.2;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .volume-input {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 16px;
+            line-height: 1.2;
+            height: 42px;
+            box-sizing: border-box;
+        }
+
+        .volume-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .volume-input.error {
+            border-color: #F44336;
+        }
+
+        .volume-display {
+            padding: 10px;
+            border: 2px solid #e8f5e8;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 16px;
+            line-height: 1.2;
+            height: 42px;
+            box-sizing: border-box;
+            background: #e8f5e8;
+            color: #2e7d2e;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .strapping-modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .strapping-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .strapping-btn-cancel {
+            background: white;
+            border: 2px solid #e0e0e0;
+            color: #666;
+        }
+
+        .strapping-btn-save {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .strapping-btn-save:hover:not(:disabled) {
+            background: #45a049;
+        }
+
+        .strapping-btn-save:disabled {
+            background: #cccccc;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .sync-status {
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            background: white;
+            border-radius: 10px;
+            padding: 12px 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 900;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .sync-status.active {
+            transform: translateX(0);
+        }
+
+        .sync-status.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .sync-status.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .sync-status.warning {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: #333;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1001;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .tooltip.active {
+            opacity: 1;
+        }
+
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 4px solid #333;
+        }
+        /* TLM Overview Section Styles */
+        .tlm-overview-section {
+            width: 100%;
+            max-width: 430px;
+            margin: 20px auto;
+            background: linear-gradient(135deg, #1a4a52 0%, #2a6a72 100%);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .tlm-overview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .tlm-overview-header h2 {
+            color: white;
+            font-size: 22px;
+            font-weight: 500;
+        }
+
+        .tlm-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .tlm-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+
+        .tlm-indicator.active {
+            background: #4CAF50;
+            box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
+            }
+            50% {
+                box-shadow: 0 0 16px rgba(76, 175, 80, 0.8);
+            }
+            100% {
+                box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
+            }
+        }
+
+        .tlm-overview-content {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .tlm-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .tlm-info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .tlm-info-item label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .tlm-info-item span {
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .tlm-correction-section {
+            margin-bottom: 20px;
+        }
+
+        .tlm-correction-section h4,
+        .tlm-photos-section h4 {
+            color: white;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+
+        .tlm-correction-comment {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 60px;
+            font-family: inherit;
+        }
+
+        .tlm-correction-comment::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .tlm-correction-comment:focus {
+            outline: none;
+            border-color: #4CAF50;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .tlm-photos-section {
+            margin-bottom: 20px;
+        }
+
+        .tlm-photos-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .tlm-photo-box {
+            position: relative;
+        }
+
+        .tlm-photo-box input[type="file"] {
+            display: none;
+        }
+
+        .tlm-photo-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            gap: 8px;
+        }
+
+        .tlm-pic-preview {
+            width: 100%;
+            height: 100px;
+            border: 2px dashed rgba(255, 255, 255, 0.4);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tlm-pic-preview:hover {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .tlm-pic-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .tlm-camera-icon {
+            width: 35px;
+            height: 35px;
+            fill: rgba(255, 255, 255, 0.6);
+            transition: fill 0.3s ease;
+        }
+
+        .tlm-pic-preview:hover .tlm-camera-icon {
+            fill: #4CAF50;
+        }
+
+        .tlm-pic-text {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 11px;
+            text-align: center;
+        }
+
+        .tlm-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .tlm-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+            display: inline-block;
+        }
+
+        .tlm-btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .tlm-btn-primary:hover {
+            background: #45a049;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+
+        .tlm-btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .tlm-btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        @media (max-width: 480px) {
+            .tlm-info {
+                grid-template-columns: 1fr;
+            }
+            
+            .tlm-photos-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="mobile-frame">
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-left">
+                <span>5:33</span>
+            </div>
+            <div class="status-right">
+                <div class="signal-bars">
+                    <div class="signal-bar" style="height: 4px;"></div>
+                    <div class="signal-bar" style="height: 6px;"></div>
+                    <div class="signal-bar" style="height: 8px;"></div>
+                    <div class="signal-bar" style="height: 10px;"></div>
+                </div>
+                <span>5G</span>
+                <div class="battery">
+                    <div class="battery-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <span class="back-arrow">←</span>
+                <h1 class="header-title">Tank Input</h1>
+            </div>
+            <div class="header-right">
+                <div class="header-icon">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
+                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                        <path d="M12 7v5l3 3" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="tlm-icon grey" id="tlmIcon" onclick="openTLMPanel()">
+                    <svg viewBox="0 0 24 24" class="tower-icon">
+                        <!-- Cell tower base -->
+                        <path d="M12 2L7 12H9V22H11V16H13V22H15V12H17L12 2Z" fill="currentColor"/>
+                        <!-- Radio waves on the left -->
+                        <path d="M5.5 8.5C5.5 5.46 7.72 2.91 10.66 2.29L9.83 0.36C5.94 1.14 3 4.58 3 8.5C3 10.87 3.93 13.03 5.46 14.63L6.88 13.21C5.7 12.03 5.5 10.36 5.5 8.5Z" fill="currentColor" opacity="0.7"/>
+                        <!-- Radio waves on the right -->
+                        <path d="M18.5 8.5C18.5 10.36 17.3 12.03 16.12 13.21L17.54 14.63C19.07 13.03 20 10.87 20 8.5C20 4.58 17.06 1.14 13.17 0.36L12.34 2.29C15.28 2.91 17.5 5.46 17.5 8.5Z" fill="currentColor" opacity="0.7"/>
+                        <!-- Smaller inner waves on the left -->
+                        <path d="M7.5 8.5C7.5 6.57 8.71 4.93 10.42 4.35L9.59 2.42C7.07 3.18 5.5 5.62 5.5 8.5C5.5 9.68 5.87 10.77 6.48 11.68L7.9 10.26C7.65 9.71 7.5 9.12 7.5 8.5Z" fill="currentColor" opacity="0.5"/>
+                        <!-- Smaller inner waves on the right -->
+                        <path d="M16.5 8.5C16.5 9.12 16.35 9.71 16.1 10.26L17.52 11.68C18.13 10.77 18.5 9.68 18.5 8.5C18.5 5.62 16.93 3.18 14.41 2.42L13.58 4.35C15.29 4.93 16.5 6.57 16.5 8.5Z" fill="currentColor" opacity="0.5"/>
+                        <!-- Line through for disconnected state (hidden by default) -->
+                        <line x1="4" y1="4" x2="20" y2="20" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="disconnect-line" style="display: none;"/>
+                    </svg>
+                    <div class="signal-waves">
+                        <div class="wave"></div>
+                        <div class="wave"></div>
+                    </div>
+                </div>
+                <div class="header-icon">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
+                        <rect x="4" y="6" width="16" height="2" rx="1"/>
+                        <rect x="4" y="11" width="16" height="2" rx="1"/>
+                        <rect x="4" y="16" width="16" height="2" rx="1"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Tank Info -->
+            <div class="tank-info">
+                <div class="tank-header">335X-36Z - SCAL20357A</div>
+                <div class="tank-subtitle">| 1</div>
+            </div>
+
+            <!-- Order Info -->
+            <div class="order-info">
+                <div class="order-row">
+                    <span class="order-label">Open Order</span>
+                    <div class="order-value">
+                        <span class="order-date">11/07/2025</span>
+                    </div>
+                </div>
+                <div class="order-row">
+                    <span class="order-label"></span>
+                    <div class="order-value">
+                        <span class="days-info">32 days</span>
+                        <svg class="location-icon" viewBox="0 0 24 24">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="order-row">
+                    <span class="order-label">Since inventory</span>
+                </div>
+            </div>
+
+            <!-- Metrics Grid -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-title">Total Target Rate</div>
+                    <div class="metric-value">1 GPD</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">Pump Variance</div>
+                    <div class="metric-value variance-value">-16059.89 %</div>
+                    <div class="metric-subtitle">Current vs Previous</div>
+                </div>
+            </div>
+
+            <!-- Tank Visual and Stats -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="tank-visual">
+                        <div class="tank-container">
+                            <div class="tank-fill"></div>
+                            <div class="tank-markers">
+                                <div class="tank-marker high">H/ 183G</div>
+                                <div class="tank-marker low">L/ 180G</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tank-size-label">Tank Size<br>200 GAL</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">Injection Rate (site)</div>
+                    <div class="metric-value">-1.14 GPD</div>
+                    <div class="metric-subtitle">Current vs Previous</div>
+                    <br>
+                    <div class="metric-title">Tank Measurement</div>
+                    <div class="metric-value">189.94 GAL</div>
+                    <div class="metric-subtitle">Current vs Previous</div>
+                </div>
+            </div>
+
+            <!-- Injection Point Data -->
+            <div class="injection-section">
+                <div class="injection-header">INJECTION POINT DATA (1 injection point)</div>
+                <div class="injection-point">
+                    <span class="injection-name">335X-36Z</span>
+                    <div class="injection-actions">
+                        <span>×</span>
+                        <span>⌄</span>
+                    </div>
+                </div>
+                <div class="injection-details">
+                    <div class="injection-detail-row">
+                        <span class="detail-label">Recommended target rate</span>
+                        <span class="detail-value">N/A</span>
+                    </div>
+                    <div class="injection-detail-row">
+                        <span class="detail-label">Pump minimum</span>
+                        <span class="detail-value">NoN GPD</span>
+                    </div>
+                    <div class="injection-detail-row">
+                        <span class="detail-label">Active Rate Type</span>
+                        <span class="detail-value">Manual</span>
+                    </div>
+                </div>
+                <div class="rate-inputs">
+                    <div class="rate-input-group">
+                        <span class="rate-input-label">Target rate</span>
+                        <span class="rate-input-label">Manual (GPD)</span>
+                        <div class="rate-input">1</div>
+                    </div>
+                    <div class="rate-input-group">
+                        <span class="rate-input-label">&nbsp;</span>
+                        <span class="rate-input-label">Active (GPD)</span>
+                        <div class="rate-input">1</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button class="btn btn-cancel">Cancel</button>
+            <button class="btn btn-save">Save</button>
+        </div>
+        
+        <!-- TLM Overview Section -->
+        <div class="tlm-overview-section">
+            <div class="tlm-overview-header">
+                <h2>TLM Overview</h2>
+                <div class="tlm-status">
+                    <span class="tlm-indicator active"></span>
+                    <span>Active</span>
+                </div>
+            </div>
+            
+            <div class="tlm-overview-content">
+                <div class="tlm-info">
+                    <div class="tlm-info-item">
+                        <label>Tank:</label>
+                        <span id="tlm-tank-id">335X-36Z</span>
+                    </div>
+                    <div class="tlm-info-item">
+                        <label>Provider:</label>
+                        <span id="tlm-provider">Not Set</span>
+                    </div>
+                    <div class="tlm-info-item">
+                        <label>TLM ID:</label>
+                        <span id="tlm-id">Not Set</span>
+                    </div>
+                </div>
+
+                <div class="tlm-correction-section">
+                    <h4>TLM Correction Factor Comments</h4>
+                    <textarea class="tlm-correction-comment" id="tlmCorrectionComment" placeholder="Enter any correction factor notes..." rows="3"></textarea>
+                </div>
+                
+                <div class="tlm-photos-section">
+                    <h4>Photos</h4>
+                    <div class="tlm-photos-grid">
+                        <div class="tlm-photo-box">
+                            <input type="file" id="tlm-pic-setup" accept="image/*" onchange="handleTLMPhoto(event, 'setup')">
+                            <label for="tlm-pic-setup" class="tlm-photo-label">
+                                <div class="tlm-pic-preview" id="tlm-preview-setup">
+                                    <svg viewBox="0 0 24 24" class="tlm-camera-icon">
+                                        <path d="M12 2C11.1 2 10.3 2.6 9.8 3.4L9.2 4.5H6C4.9 4.5 4 5.4 4 6.5V18.5C4 19.6 4.9 20.5 6 20.5H18C19.1 20.5 20 19.6 20 18.5V6.5C20 5.4 19.1 4.5 18 4.5H14.8L14.2 3.4C13.7 2.6 12.9 2 12 2ZM12 7C14.8 7 17 9.2 17 12C17 14.8 14.8 17 12 17C9.2 17 7 14.8 7 12C7 9.2 9.2 7 12 7ZM12 9C10.3 9 9 10.3 9 12C9 13.7 10.3 15 12 15C13.7 15 15 13.7 15 12C15 10.3 13.7 9 12 9Z"/>
+                                    </svg>
+                                </div>
+                                <span class="tlm-pic-text">TLM & Tank Setup</span>
+                            </label>
+                        </div>
+                        
+                        <div class="tlm-photo-box">
+                            <input type="file" id="tlm-pic-barcode" accept="image/*" onchange="handleTLMPhoto(event, 'barcode')">
+                            <label for="tlm-pic-barcode" class="tlm-photo-label">
+                                <div class="tlm-pic-preview" id="tlm-preview-barcode">
+                                    <svg viewBox="0 0 24 24" class="tlm-camera-icon">
+                                        <path d="M12 2C11.1 2 10.3 2.6 9.8 3.4L9.2 4.5H6C4.9 4.5 4 5.4 4 6.5V18.5C4 19.6 4.9 20.5 6 20.5H18C19.1 20.5 20 19.6 20 18.5V6.5C20 5.4 19.1 4.5 18 4.5H14.8L14.2 3.4C13.7 2.6 12.9 2 12 2ZM12 7C14.8 7 17 9.2 17 12C17 14.8 14.8 17 12 17C9.2 17 7 14.8 7 12C7 9.2 9.2 7 12 7ZM12 9C10.3 9 9 10.3 9 12C9 13.7 10.3 15 12 15C13.7 15 15 13.7 15 12C15 10.3 13.7 9 12 9Z"/>
+                                    </svg>
+                                </div>
+                                <span class="tlm-pic-text">TLM Barcode</span>
+                            </label>
+                        </div>
+                        
+                        <div class="tlm-photo-box">
+                            <input type="file" id="tlm-pic-other" accept="image/*" onchange="handleTLMPhoto(event, 'other')">
+                            <label for="tlm-pic-other" class="tlm-photo-label">
+                                <div class="tlm-pic-preview" id="tlm-preview-other">
+                                    <svg viewBox="0 0 24 24" class="tlm-camera-icon">
+                                        <path d="M12 2C11.1 2 10.3 2.6 9.8 3.4L9.2 4.5H6C4.9 4.5 4 5.4 4 6.5V18.5C4 19.6 4.9 20.5 6 20.5H18C19.1 20.5 20 19.6 20 18.5V6.5C20 5.4 19.1 4.5 18 4.5H14.8L14.2 3.4C13.7 2.6 12.9 2 12 2ZM12 7C14.8 7 17 9.2 17 12C17 14.8 14.8 17 12 17C9.2 17 7 14.8 7 12C7 9.2 9.2 7 12 7ZM12 9C10.3 9 9 10.3 9 12C9 13.7 10.3 15 12 15C13.7 15 15 13.7 15 12C15 10.3 13.7 9 12 9Z"/>
+                                    </svg>
+                                </div>
+                                <span class="tlm-pic-text">Other</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tlm-actions">
+                    <button class="tlm-btn tlm-btn-primary" onclick="openTLMConfig()">Configure TLM</button>
+                    <a href="tlm-popup.html" class="tlm-btn tlm-btn-secondary">TLM Demo Page</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TLM Bottom Panel -->
+    <div class="tlm-panel-overlay" id="tlmPanelOverlay" onclick="closeTLMPanel()">
+        <div class="tlm-panel" id="tlmPanel" onclick="event.stopPropagation()">
+            <div class="tlm-panel-handle" onclick="closeTLMPanel()"></div>
+            
+            <div class="tlm-panel-header">
+                <h2 class="tlm-panel-title">TLM Overview</h2>
+                <p class="tlm-panel-subtitle">Tank 335X-36Z - SCAL20357A</p>
+            </div>
+            
+            <div class="tlm-panel-content" id="tlmPanelContent">
+                <!-- Content will be dynamically generated based on TLM state -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Strapping Table Modal -->
+    <div class="strapping-modal" id="strappingModal">
+        <div class="strapping-modal-content">
+            <div class="strapping-modal-header">
+                <h3 id="strappingModalTitle">Create New Strapping Table</h3>
+                <button class="close-btn" onclick="closeStrappingModal()">&times;</button>
+            </div>
+            
+            <div class="strapping-table-form">
+                <div class="form-group">
+                    <label for="table-name">Table Name <span class="required">*</span></label>
+                    <input type="text" id="table-name" class="table-name-input" placeholder="Enter strapping table name" oninput="validateStrappingForm()">
+                    <div class="validation-error" id="table-name-error" style="display: none;">Table name is required</div>
+                </div>
+                
+                <div class="tank-params">
+                    <div class="form-group">
+                        <label for="max-height">Max Tank Height (in) <span class="required">*</span></label>
+                        <input type="number" id="max-height" class="number-input" placeholder="0" step="0.1" min="0.1" oninput="calculateHeights()">
+                        <div class="validation-error" id="max-height-error" style="display: none;">Must be greater than 0</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="max-volume">Max Tank Volume (gal) <span class="required">*</span></label>
+                        <input type="number" id="max-volume" class="number-input" placeholder="0" step="0.1" min="0.1" oninput="updateMaxVolume()">
+                        <div class="validation-error" id="max-volume-error" style="display: none;">Must be greater than 0</div>
+                    </div>
+                </div>
+                
+                <div class="percentage-table" id="percentageTable" style="display: none;">
+                    <div class="table-header">
+                        <div>Fill Level</div>
+                        <div>Height (in)</div>
+                        <div>Volume (gal)</div>
+                    </div>
+                    <div class="table-row">
+                        <div class="percentage-label">100%</div>
+                        <div class="calculated-height" id="height-100">0.0</div>
+                        <div class="volume-display" id="volume-100">0.0</div>
+                    </div>
+                    <div class="table-row">
+                        <div class="percentage-label">80%</div>
+                        <div class="calculated-height" id="height-80">0.0</div>
+                        <input type="number" class="volume-input" id="volume-80" placeholder="0" step="0.1" oninput="validateVolumeOrder()">
+                    </div>
+                    <div class="table-row">
+                        <div class="percentage-label">60%</div>
+                        <div class="calculated-height" id="height-60">0.0</div>
+                        <input type="number" class="volume-input" id="volume-60" placeholder="0" step="0.1" oninput="validateVolumeOrder()">
+                    </div>
+                    <div class="table-row">
+                        <div class="percentage-label">40%</div>
+                        <div class="calculated-height" id="height-40">0.0</div>
+                        <input type="number" class="volume-input" id="volume-40" placeholder="0" step="0.1" oninput="validateVolumeOrder()">
+                    </div>
+                    <div class="table-row">
+                        <div class="percentage-label">20%</div>
+                        <div class="calculated-height" id="height-20">0.0</div>
+                        <input type="number" class="volume-input" id="volume-20" placeholder="0" step="0.1" oninput="validateVolumeOrder()">
+                    </div>
+                    <div class="validation-error" id="volume-order-error" style="display: none; margin-top: 10px;">Each tier must be less than the one above</div>
+                </div>
+            </div>
+            
+            <div class="strapping-modal-buttons">
+                <button class="strapping-btn strapping-btn-cancel" onclick="closeStrappingModal()">Cancel</button>
+                <button class="strapping-btn strapping-btn-save" id="saveStrappingBtn" onclick="saveStrappingTable()">Save Table</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sync Status Notification -->
+    <div class="sync-status" id="syncStatus">
+        <span id="syncMessage">Syncing...</span>
+    </div>
+
+    <!-- Strapping Table View Modal -->
+    <div class="strapping-modal" id="strappingViewModal">
+        <div class="strapping-modal-content">
+            <div class="strapping-modal-header">
+                <h3 id="viewModalTitle">Strapping Table Details</h3>
+                <button class="close-btn" onclick="closeStrappingViewModal()">&times;</button>
+            </div>
+            
+            <div id="strappingViewContent">
+                <!-- Content will be dynamically generated -->
+            </div>
+            
+            <div class="strapping-modal-buttons">
+                <button class="strapping-btn strapping-btn-cancel" onclick="closeStrappingViewModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tooltip -->
+    <div class="tooltip" id="tooltip"></div>
+
+    <script src="fsx-app-enhanced.js"></script>
+</body>
+</html>
