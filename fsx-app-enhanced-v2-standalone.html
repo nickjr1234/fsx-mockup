@@ -3332,9 +3332,9 @@ function generateTableName() {
     let tableName = '';
     
     if (tankType === 'vertical') {
-        // Vertical naming: Vertical_Vol_{maxVolume}Gal_Height_{maxHeight}In_GPI_{calculated}
+        // Vertical naming: StrapHt100_{maxHeight}In_StrapVol100_{maxVolume}Gal_{calculated}GPI
         const gpi = (maxVolume / maxHeight).toFixed(2);
-        tableName = `Vertical_Vol_${maxVolume}Gal_Height_${maxHeight}In_GPI_${gpi}`;
+        tableName = `StrapHt100_${maxHeight}In_StrapVol100_${maxVolume}Gal_${gpi}GPI`;
     } else if (tankType === 'horizontal') {
         // Horizontal naming: Hor_Vol_{maxVolume}Gal_Height_{maxHeight}In_Vol80_{vol80}Gal_Vol60_{vol60}Gal_Vol40_{vol40}Gal_Vol20_{vol20}Gal
         const volume80 = parseFloat(document.getElementById('volume-80').value) || 0;
