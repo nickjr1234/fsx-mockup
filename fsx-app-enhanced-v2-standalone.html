@@ -3336,18 +3336,18 @@ function generateTableName() {
         const gpi = (maxVolume / maxHeight).toFixed(2);
         tableName = `StrapHt100_${maxHeight}In_StrapVol100_${maxVolume}Gal_${gpi}GPI`;
     } else if (tankType === 'horizontal') {
-        // Horizontal naming: Hor_Vol_{maxVolume}Gal_Height_{maxHeight}In_Vol80_{vol80}Gal_Vol60_{vol60}Gal_Vol40_{vol40}Gal_Vol20_{vol20}Gal
+        // Horizontal naming: StrapHt100_{maxHeight}In_StrapVol100_{maxVolume}Gal_StrapVol80_{vol80}Gal_StapVol60_{vol60}Gal_StrapVol40_{vol40}Gal_StrapVol20_{vol20}Gal
         const volume80 = parseFloat(document.getElementById('volume-80').value) || 0;
         const volume60 = parseFloat(document.getElementById('volume-60').value) || 0;
         const volume40 = parseFloat(document.getElementById('volume-40').value) || 0;
         const volume20 = parseFloat(document.getElementById('volume-20').value) || 0;
-        
-        tableName = `Hor_Vol_${maxVolume}Gal_Height_${maxHeight}In`;
-        
-        if (volume80 > 0) tableName += `_Vol80_${volume80}Gal`;
-        if (volume60 > 0) tableName += `_Vol60_${volume60}Gal`;
-        if (volume40 > 0) tableName += `_Vol40_${volume40}Gal`;
-        if (volume20 > 0) tableName += `_Vol20_${volume20}Gal`;
+
+        tableName = `StrapHt100_${maxHeight}In_StrapVol100_${maxVolume}Gal`;
+
+        if (volume80 > 0) tableName += `_StrapVol80_${volume80}Gal`;
+        if (volume60 > 0) tableName += `_StapVol60_${volume60}Gal`;
+        if (volume40 > 0) tableName += `_StrapVol40_${volume40}Gal`;
+        if (volume20 > 0) tableName += `_StrapVol20_${volume20}Gal`;
     }
     
     tableNameDisplay.textContent = tableName;
