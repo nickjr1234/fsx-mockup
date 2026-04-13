@@ -1081,11 +1081,12 @@
         .strapping-modal-content {
             background: white;
             border-radius: 20px;
-            padding: 30px;
+            padding: 20px;
             width: 100%;
             max-width: 500px;
             max-height: 90vh;
             overflow-y: auto;
+            overflow-x: hidden;
             animation: slideUp 0.3s ease;
         }
 
@@ -1156,60 +1157,69 @@
             padding: 10px;
             border-radius: 8px;
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
+            grid-template-columns: 56px 1fr 1fr;
+            gap: 8px;
             font-weight: 500;
             color: #555;
             margin-bottom: 10px;
+            font-size: 13px;
         }
 
         .table-row {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
+            grid-template-columns: 56px 1fr 1fr;
+            gap: 8px;
             margin-bottom: 8px;
             align-items: center;
+            min-width: 0;
         }
 
         .percentage-label {
             font-weight: 500;
             color: #333;
             text-align: center;
-            padding: 10px;
+            padding: 6px 4px;
             background: #f9f9f9;
             border-radius: 6px;
-            font-size: 16px;
+            font-size: 13px;
             line-height: 1.2;
             height: 42px;
             display: flex;
             align-items: center;
             justify-content: center;
+            min-width: 0;
+            width: 100%;
         }
 
         .calculated-height {
             text-align: center;
-            padding: 10px;
+            padding: 6px 4px;
             background: #e8f5e8;
             border-radius: 6px;
             font-weight: 500;
             color: #2e7d2e;
-            font-size: 16px;
+            font-size: 13px;
             line-height: 1.2;
             height: 42px;
             display: flex;
             align-items: center;
             justify-content: center;
+            min-width: 0;
+            width: 100%;
+            overflow: hidden;
         }
 
         .volume-input {
-            padding: 10px;
+            padding: 6px 4px;
             border: 2px solid #e0e0e0;
             border-radius: 6px;
             text-align: center;
-            font-size: 16px;
+            font-size: 13px;
             line-height: 1.2;
             height: 42px;
             box-sizing: border-box;
+            min-width: 0;
+            width: 100%;
         }
 
         .volume-input:focus {
@@ -1222,11 +1232,11 @@
         }
 
         .volume-display {
-            padding: 10px;
+            padding: 6px 4px;
             border: 2px solid #e8f5e8;
             border-radius: 6px;
             text-align: center;
-            font-size: 16px;
+            font-size: 13px;
             line-height: 1.2;
             height: 42px;
             box-sizing: border-box;
@@ -1236,6 +1246,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            min-width: 0;
+            width: 100%;
+            overflow: hidden;
         }
 
         .strapping-modal-buttons {
